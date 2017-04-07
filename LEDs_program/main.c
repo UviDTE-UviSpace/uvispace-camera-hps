@@ -1,13 +1,16 @@
+// Required by hwlib.h 
 #define soc_cv_av
-
+// Standard libraries
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+// DS-5 libraries. They are placed at <DS-5-path>/embedded/ip/altera/hps/altera_hps/hwlib/include
 #include "hwlib.h"
 #include "soc_cv_av/socal/socal.h"
 #include "soc_cv_av/socal/hps.h"
 #include "soc_cv_av/socal/alt_gpio.h"
+// Local project header.
 #include "hps_0.h"
 
 #define HW_REGS_BASE ( ALT_STM_OFST )
