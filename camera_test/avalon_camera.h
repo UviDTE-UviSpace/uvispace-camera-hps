@@ -1,6 +1,8 @@
 #ifndef __AVALON_CAMERA_H
 #define __AVALON_CAMERA_H
 
+#include <inttypes.h>//for uint16_t
+
 /* 
 Macros for accessing an address map with a data bus size of 8, 16 or 32 bits.
 */ 
@@ -17,13 +19,16 @@ Macros for accessing an address map with a data bus size of 8, 16 or 32 bits.
 #define IORD32(base, offset)            (* ((uint32_t*)((void*)base + offset*4)))
 #endif
 
-// slave address
+/* 
+Internal address map and macro functions for control registers
+*/ 
 // 32-bit addresses
 #define CAPTURE_START           0x00
 #define CAPTURE_CONFIGURE       0x01
 #define CAPTURE_SELECT_VGA      0x02
 #define CAPTURE_SELECT_SENSOR   0x03
 #define CAPTURE_DATA            0x04
+#define CAMERA_SOFT_RESET       0x05
 
 #define IOWR_CAMERA_CAPTURE_START(base)                 IOWR32(base, CAPTURE_START, 1)
 #define IOWR_CAMERA_CAPTURE_STOP(base)                  IOWR32(base, CAPTURE_START, 0)
@@ -33,8 +38,13 @@ Macros for accessing an address map with a data bus size of 8, 16 or 32 bits.
 #define IOWR_CAMERA_CAPTURE_SELECT_VGA(base, dat)       IOWR32(base, CAPTURE_SELECT_VGA, dat)
 #define IOWR_CAMERA_CAPTURE_SELECT_SENSOR(base, dat)    IOWR32(base, CAPTURE_SELECT_SENSOR, dat)
 #define IORD_CAMERA_READ_DATA(base)                     IORD32(base, CAPTURE_DATA)
+#define IOWR_CAMERA_CAMERA_SOFT_RESET(base, dat)        IOWR32(base, CAMERA_SOFT_RESET, dat)
+#define IORD_CAMERA_CAMERA_SOFT_RESET(base)             IORD32(base, CAMERA_SOFT_RESET)
 
-// Registers address
+
+/* 
+Internal address map and macro functions for control registers
+*/ 
 // 32-bit addresses
 #define ADDR_WIDTH          0x08
 #define ADDR_HEIGHT         0x0a
@@ -69,4 +79,10 @@ Macros for accessing an address map with a data bus size of 8, 16 or 32 bits.
 #define IORD_CAMERA_EXPOSURE(base)           IORD32(base, ADDR_EXPOSURE)
 #define IOWR_CAMERA_EXPOSURE(base, dat)      IOWR32(base, ADDR_EXPOSURE, dat)
 
+/* 
+Higher level functions using the macro functions
+*/ 
+int camera_set_exposure(uint16_t exposure);
+int camera_generate_soft_reset(void);
+int camera_init(void* camera_address);
 #endif

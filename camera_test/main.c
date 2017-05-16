@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <inttypes.h>
+#include <stdlib.h> // atoi() 
 // DS-5 libraries. They are placed at <DS-5-path>/embedded/ip/altera/hps/altera_hps/hwlib/include
 //#include "hwlib.h"
 //#include "soc_cv_av/socal/socal.h"
@@ -24,7 +25,8 @@ int main(int argc, char **argv) {
     void *virtual_base;
     int fd;
     void *camera_virtual_address;
-    void *dipsw_virtual_address;
+    //void *dipsw_virtual_address;
+    
     // Open the device file for accessing the physical memory.
     if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {
         printf( "ERROR: could not open \"/dev/mem\"...\n" );
@@ -42,17 +44,25 @@ int main(int argc, char **argv) {
     // Virtual address of the camera registers.
     camera_virtual_address = virtual_base + ( ( unsigned long  )( AVALON_CAMERA_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
     // Virtual address of the board switches.
-    dipsw_virtual_address = virtual_base + ( ( unsigned long  )( DIPSW_PIO_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
-    // Write some random value to the exposure register.
-    printf("exposure: %u\n", ((unsigned int) IORD_CAMERA_EXPOSURE(camera_virtual_address)));
-    (IOWR_CAMERA_EXPOSURE(camera_virtual_address, 0x2300));
-    // The switches value is printed every second.
-    while(1){
-        printf("Switches: %u\n", (*((unsigned int *) dipsw_virtual_address)));
-        printf("exposure: %u\n", ((unsigned int) IORD_CAMERA_EXPOSURE(camera_virtual_address)));
-        // wait 1s.
-        usleep( 1000*1000 );
+    //dipsw_virtual_address = virtual_base + ( ( unsigned long  )( DIPSW_PIO_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+    
+    //Initialize camera
+    camera_init(camera_virtual_address);
+    
+    //Write the exposure value written by the user in the avalon_camera registers
+    if ( argc == 2)
+    {
+        camera_set_exposure(atoi(argv[1]));
     }
+    else
+    {
+        camera_set_exposure(0x07C0); //value by default
+    }
+    printf("exposure changed to: %u\n", ((unsigned int) IORD_CAMERA_EXPOSURE(camera_virtual_address)));
+   
+    //reset the configure_camera component so the changes take effect
+    camera_generate_soft_reset();
+    
     // clean up the memory mapping and exit
     if( munmap( virtual_base, HW_REGS_SPAN ) != 0 ) {
         printf( "ERROR: munmap() failed...\n" );
