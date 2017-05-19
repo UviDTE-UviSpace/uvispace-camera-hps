@@ -42,22 +42,29 @@ int main(int argc, char **argv) {
         return( 1 );
     }
     // Virtual address of the camera registers.
-    camera_virtual_address = virtual_base + ( ( unsigned long  )( AVALON_CAMERA_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
+    camera_virtual_address = virtual_base + ( ( unsigned long  )( AVALON_CAMERA_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
     // Virtual address of the board switches.
     //dipsw_virtual_address = virtual_base + ( ( unsigned long  )( DIPSW_PIO_BASE ) & ( unsigned long)( HW_REGS_MASK ) );
     
     //Initialize camera
     camera_init(camera_virtual_address);
-    
-    //Write the exposure value written by the user in the avalon_camera registers
-    if ( argc == 2)
+
+    //Write the col_size value written by the user in the avalon_camera registers
+    if ( argc == 4)
     {
+        camera_set_row_size(atoi(argv[3]));
+        camera_set_col_size(atoi(argv[2]));
         camera_set_exposure(atoi(argv[1]));
     }
     else
     {
-        camera_set_exposure(0x07C0); //value by default
+        // Set default values.
+        camera_set_col_size(0x09FF);
+        camera_set_row_size(0x077F);
+        camera_set_exposure(0x07C0);
     }
+    printf("col_size changed to: %u\n", ((unsigned int) IORD_CAMERA_COLUMN_SIZE(camera_virtual_address)));
+    printf("row_size changed to: %u\n", ((unsigned int) IORD_CAMERA_ROW_SIZE(camera_virtual_address)));
     printf("exposure changed to: %u\n", ((unsigned int) IORD_CAMERA_EXPOSURE(camera_virtual_address)));
    
     //reset the configure_camera component so the changes take effect
@@ -72,3 +79,4 @@ int main(int argc, char **argv) {
     close( fd );
     return( 0 );
 }
+
