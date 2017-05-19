@@ -21,15 +21,15 @@
  */
 
 /*
- * Macros for device 'avalon_camera', class 'avalon_camera'
- * The macros are prefixed with 'AVALON_CAMERA_'.
+ * Macros for device 'avalon_camera_0', class 'avalon_camera'
+ * The macros are prefixed with 'AVALON_CAMERA_0_'.
  * The prefix is the slave descriptor.
  */
-#define AVALON_CAMERA_COMPONENT_TYPE avalon_camera
-#define AVALON_CAMERA_COMPONENT_NAME avalon_camera
-#define AVALON_CAMERA_BASE 0x0
-#define AVALON_CAMERA_SPAN 128
-#define AVALON_CAMERA_END 0x7f
+#define AVALON_CAMERA_0_COMPONENT_TYPE avalon_camera
+#define AVALON_CAMERA_0_COMPONENT_NAME avalon_camera_0
+#define AVALON_CAMERA_0_BASE 0x0
+#define AVALON_CAMERA_0_SPAN 64
+#define AVALON_CAMERA_0_END 0x3f
 
 /*
  * Macros for device 'led_pio', class 'altera_avalon_pio'
