@@ -28,8 +28,8 @@
 #define AVALON_CAMERA_0_COMPONENT_TYPE avalon_camera
 #define AVALON_CAMERA_0_COMPONENT_NAME avalon_camera_0
 #define AVALON_CAMERA_0_BASE 0x0
-#define AVALON_CAMERA_0_SPAN 64
-#define AVALON_CAMERA_0_END 0x3f
+#define AVALON_CAMERA_0_SPAN 128
+#define AVALON_CAMERA_0_END 0x7f
 
 /*
  * Macros for device 'led_pio', class 'altera_avalon_pio'
