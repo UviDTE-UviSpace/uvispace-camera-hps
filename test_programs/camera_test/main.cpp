@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
         cam.config_set_row_mode(atoi(argv[7])); 
         cam.config_set_column_mode(atoi(argv[8]));
         cam.config_set_exposure(atoi(argv[9]));
-        cam.update_config();
+        cam.config_update();
         print_camera_config(&cam);
     }
     else if (argc == 2)
@@ -88,8 +88,8 @@ int main(int argc, char **argv) {
     else
     {
         // Set default values.
-        cam.set_default_config();
-        cam.update_config();
+        cam.config_set_default();
+        cam.config_update();
         print_camera_config(&cam);
     }
     
