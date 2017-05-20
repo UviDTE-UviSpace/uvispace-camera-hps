@@ -33,6 +33,7 @@ Internal address map of avalon camera (32-bit addresses)
 #define CAMERA_BUFF1                   0x04
 #define CAMERA_BUFF0_FULL              0x05
 #define CAMERA_BUFF1_FULL              0x06
+#define CAMERA_CAPTURE_STANDBY         0x07
 // registers to control camera_config component
 #define ADDR_WIDTH                     0x09
 #define ADDR_HEIGHT                    0x0a
@@ -65,6 +66,10 @@ Macro functions for RD/WR the registers
 //
 #define IOWR_CAMERA_START_CAPTURE(base, dat)    IOWR32(base, CAMERA_START_CAPTURE, dat)
 #define IORD_CAMERA_START_CAPTURE(base)         IORD32(base, CAMERA_START_CAPTURE)
+#define IOWR_CAMERA_CAPTURE_WIDTH(base, dat)    IOWR32(base, CAMERA_CAPTURE_WIDTH, dat)
+#define IORD_CAMERA_CAPTURE_WIDTH(base)         IORD32(base, CAMERA_CAPTURE_WIDTH)
+#define IOWR_CAMERA_CAPTURE_HEIGHT(base, dat)   IOWR32(base, CAMERA_CAPTURE_HEIGHT, dat)
+#define IORD_CAMERA_CAPTURE_HEIGHT(base)        IORD32(base, CAMERA_CAPTURE_HEIGHT)
 #define IOWR_CAMERA_BUFF0(base, dat)            IOWR32(base, CAMERA_BUFF0, dat)
 #define IORD_CAMERA_BUFF0(base)                 IORD32(base, CAMERA_BUFF0)
 #define IOWR_CAMERA_BUFF1(base, dat)            IOWR32(base, CAMERA_BUFF1, dat)
@@ -73,6 +78,7 @@ Macro functions for RD/WR the registers
 #define IORD_CAMERA_BUFF0FULL(base)             IORD32(base, CAMERA_BUFF0_FULL)
 #define IOWR_CAMERA_BUFF1FULL(base, dat)        IOWR32(base, CAMERA_BUFF1_FULL, dat)
 #define IORD_CAMERA_BUFF1FULL(base)             IORD32(base, CAMERA_BUFF1_FULL)
+#define IORD_CAMERA_CAPTURE_STANDBY(base)       IORD32(base, CAMERA_CAPTURE_STANDBY)
 //
 #define IORD_CAMERA_WIDTH(base)                 IORD32(base, ADDR_WIDTH)
 #define IOWR_CAMERA_WIDTH(base, dat)            IOWR32(base, ADDR_WIDTH, dat)
@@ -97,6 +103,28 @@ Macro functions for RD/WR the registers
 #define IOWR_CAMERA_SOFT_RESET(base, dat)       IOWR32(base, CAMERA_SOFT_RESET, dat)
 
 /* 
+Struct to help the acquisition of the image
+*/ 
+//This is the size in bits of a color component (R,G,B or Gray)
+//It should be the same as the value given in capture_image component 
+#define COMPONENT_SIZE 8
+#if COMPONENT_SIZE == 8
+    typedef uint8_t color_component;
+#endif
+#if COMPONENT_SIZE == 16
+    typedef uint16_t color_component;
+#endif
+#define __LOW_LEVEL_RW_MACROS
+//format of a captured pixel
+typedef struct cpixel_
+{
+    color_component R;
+    color_component G;
+    color_component B;
+    color_component Gray;
+}cpixel;
+
+/* 
 Class definition for easy control of the camera
 */
 class Camera
@@ -105,6 +133,18 @@ private: //accesible only inside the class
     //--Class Variables--//
     //Virtual base address of the avalon_camera. Filled in the constructor
     void* address;
+public:
+    //Size of the image in pixels (screen pixels. 
+    //dont missunderstand with cam pixels that are usually double)
+    //Filled each time config_set_width and config_set_height are called
+    uint16_t img_width;
+    uint16_t img_height;
+private:
+    //virtual addresses of the buffers where images are captured.
+    cpixel* buff0_v; //buffer to save odd lines
+    cpixel* buff1_v; //buffer to save even lines
+    cpixel* current_buff_v; //sometimes buff0_v, sometimes buff1_v 
+    
 public: //accessible from outside the class
     //--Class Methods definition--//
     //constructor 
@@ -113,7 +153,7 @@ public: //accessible from outside the class
     //methods to set the camera configuration
     //the following methods change the values of the avalon_camera
     //registers without resetting the camera. So after using this 
-    //functions call update_config to reset the camera with the 
+    //functions call config_update to reset the camera with the 
     //new parameters and actually change the camera behaviour.
     int config_set_width(uint16_t val);
     int config_set_height(uint16_t val);
@@ -124,10 +164,10 @@ public: //accessible from outside the class
     int config_set_row_mode(uint16_t val);
     int config_set_column_mode(uint16_t val);
     int config_set_exposure(uint16_t val);
-    int set_default_config(void);
-    //update_config loads new configuration into the camera and resets
+    int config_set_default(void);
+    //config_update loads new configuration into the camera and resets
     //the video stream.
-    int update_config(void);
+    int config_update(void);
     
     //methods to get the camera configuration
     uint16_t config_get_width(void);
@@ -141,8 +181,9 @@ public: //accessible from outside the class
     uint16_t config_get_exposure(void);
     
     //methods to capture an image into the processor
+    int capture_start(void* buffer_v, void* buffer_p);
+    cpixel* capture_get_line(void);
     
-     
 private: //accesible from ouside the class   
     //resets and removes soft reset to reset the video stream 
     //it is private. not intended to be used by the user yet
@@ -155,19 +196,21 @@ private: //accesible from ouside the class
  Camera::Camera(void* virtual_address)
  {
      this->address = virtual_address;
-     this->set_default_config();
-     this->update_config();
+     this->config_set_default();
+     this->config_update();
  }
  
  //methods to set the camera configuration
  int Camera::config_set_width(uint16_t val) 
  {
      IOWR32(this->address, ADDR_WIDTH, val);
+     this->img_width = val;
      return 0;
  }
  int Camera::config_set_height(uint16_t val) 
  {
      IOWR32(this->address, ADDR_HEIGHT, val);
+     this->img_height = val;
      return 0;
  }
  int Camera::config_set_start_row(uint16_t val) 
@@ -205,7 +248,7 @@ private: //accesible from ouside the class
      IOWR32(this->address, ADDR_EXPOSURE, val);
      return 0;
  }
- int Camera::set_default_config(void) 
+ int Camera::config_set_default(void) 
  {
      this->config_set_width(CONFIG_WIDTH_DEFAULT);
      this->config_set_height(CONFIG_HEIGHT_DEFAULT);
@@ -218,7 +261,7 @@ private: //accesible from ouside the class
      this->config_set_exposure(CONFIG_EXPOSURE_DEFAULT);
      return 0;
  }    
- int Camera::update_config(void)
+ int Camera::config_update(void)
  {
      //this function is equal to reset now but in the future 
      //could not be. So use this to update the camera config.
@@ -263,6 +306,123 @@ private: //accesible from ouside the class
      return IORD32(this->address, ADDR_EXPOSURE);
  }
  
+ //--Capture image methods
+ //capture_start()
+ //
+ //description: starts the acquisition of an image using image_capture 
+ //component. image_capture component uses 2 pointers (buff0 and buff1) to
+ //save lines of the image. The buffer passed in this function should
+ //have space enough to store 2 lines = sizeof(cpixel)*this->img_width*2.
+ //image_capture will use the first part of the buffer to save odd lines
+ //(buff0) and the second to save even lines (buff1). After capture_start
+ //is called use capture_get_line() to know when a new line has been
+ //captured and its virtual address to get access from processor to the 
+ //line. The number of lines that will be acquired are this->img_height.
+ //There is no need to wait if you wanna stop a capture in the middle.
+ //The function will wait until the component enters in standby to
+ //synchronize and start a new image. So it is safe to recall the function
+ //even if you don´t know the state of the previous acquisition. 
+ //
+ // parameters:
+ //   -buffer_v: Software address of the buffer where lines will
+ //    be stored. 
+ //   -buffer_p: Equivalent physical address to buffer_v
+ //    This buffer must be physically contiguous cause image_capture will
+ //    write continuously to it.
+ //    Minimum size = sizeof(cpixel)*this->img_width*2.
+ //
+ // return: 0 if success. -1 if there was some error.
+ int Camera::capture_start(void* buffer_v, void* buffer_p)
+ {
+    //generate the software addresses of buff0 and buff1
+    this->buff0_v = (cpixel*) buffer_v;
+    this->buff1_v = (cpixel*)((uint8_t*)buffer_v + sizeof(cpixel)*this->img_width);
+    
+    //generate physical addresses and save the into the avalon_camera
+    //so image capture knows physical addresses of buff0 and buff1
+    void* buff0_p = buffer_p;
+    void* buff1_p = (void*)((uint8_t*)buffer_p + sizeof(cpixel)*this->img_width);
+    IOWR32(this->address, CAMERA_BUFF0, buff0_p);
+    IOWR32(this->address, CAMERA_BUFF1, buff1_p);
+    
+    //Indicate the image size to the capture_image component
+    IOWR32(this->address, CAMERA_CAPTURE_WIDTH, this->img_width);
+    IOWR32(this->address, CAMERA_CAPTURE_HEIGHT, this->img_height);
+    
+    //Wait until Standby signal is 1. Its the way to ensure that the component
+    //is not in reset or acquiring a signal.
+    int counter = 100000000;
+    while((!(IORD32(this->address, CAMERA_CAPTURE_STANDBY)))&&(counter>0))
+    {
+        //ugly way avoid software to get stuck
+        counter--; 
+    }
+    if (counter == 0) return -1;
+    
+    //Now the component is in STandby (state1). Counters and full buffer 
+    //flags are automatically reset in hardware.
+    
+    //Start the capture (it is autoreset by hardware in state 2)
+    IOWR32(this->address, CAMERA_CAPTURE_HEIGHT, this->img_height);
+    
+    //First line will be saved in buff0
+    this->current_buff_v = this->buff0_v; 
+    return 0;
+ }
+ //capture_get_line()
+ //
+ //description: waits until the current buffer is acquired with a new line.
+ //it gives as return value the pointer of the line just acquired.
+ //This buffer should be emptied before the next line is acquired otherwise
+ //new data will overwrite the old line. The function checks just after
+ //entering the flag of the line that is being acquired. If it is '1' 
+ //without any waiting returns error code (0).
+ //
+ // return: pointer of the image line just acquired. 0 if there was some error.
+ cpixel* Camera::capture_get_line(void)
+ {
+    int counter = 100000000;
+    
+    //if the camera is now saving in the buff0 (odd lines)
+    if (this->current_buff_v = this->buff0_v)
+    {
+        //check if buff0 is full without waiting (dangerous)
+        if (IORD32(this->address, CAMERA_BUFF0_FULL)) return 0;
+        else
+        {
+            //wait for the line to be acquired
+            while((!IORD32(this->address, CAMERA_BUFF0_FULL))&&(counter>0))
+            {
+                //ugly way avoid software to get stuck
+                counter--; 
+            }
+            if (counter == 0) return 0;
+            
+            this->current_buff_v = this->buff1_v;
+            return this->buff0_v;          
+        }
+    }
+    //if the camera is now saving in the buff1 (even lines)
+    else
+    {
+        //check if buff1 is full without waiting (dangerous)
+        if (IORD32(this->address, CAMERA_BUFF1_FULL)) return 0;
+        else
+        {
+            //wait for the line to be acquired
+            while((!IORD32(this->address, CAMERA_BUFF1_FULL))&&(counter>0))
+            {
+                //ugly way avoid software to get stuck
+                counter--; 
+            }
+            if (counter == 0) return 0;
+            
+            this->current_buff_v = this->buff0_v;
+            return this->buff1_v;          
+        }
+    }
+    
+ }
  
  //reset
  int Camera::reset(void)
