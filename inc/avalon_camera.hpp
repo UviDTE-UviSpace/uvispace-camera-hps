@@ -107,7 +107,7 @@ Struct to help the acquisition of the image
 */ 
 //This is the size in bits of a color component (R,G,B or Gray)
 //It should be the same as the value given in capture_image component 
-#define COMPONENT_SIZE 8
+#define COMPONENT_SIZE 8 //(8 and 16 are the only values supported)
 #if COMPONENT_SIZE == 8
     typedef uint8_t color_component;
 #endif
@@ -362,8 +362,9 @@ private: //accesible from ouside the class
     //Now the component is in STandby (state1). Counters and full buffer 
     //flags are automatically reset in hardware.
     
-    //Start the capture (it is autoreset by hardware in state 2)
-    IOWR32(this->address, CAMERA_CAPTURE_HEIGHT, this->img_height);
+    //Start the capture (generate a pos flank in start_capture signal)
+    IOWR32(this->address, CAMERA_START_CAPTURE, 1);
+    IOWR32(this->address, CAMERA_START_CAPTURE, 0);
     
     //First line will be saved in buff0
     this->current_buff_v = this->buff0_v; 

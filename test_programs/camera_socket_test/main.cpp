@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
     camera_virtual_address = (void*)((uint8_t*)virtual_base_fpga + ( ( unsigned long  )( AVALON_CAMERA_0_BASE ) & ( unsigned long)( HW_REGS_MASK ) ));
     
     // Map the physical HPS On-Chip RAM into the virtual address space
-    //of this application to have access to it.
+    // of this application to have access to it.
     virtual_base_hps_ocr = mmap(NULL, HPS_OCR_SPAM, (PROT_READ | PROT_WRITE),
                         MAP_SHARED, fd, HPS_OCR_SPAM);
     if( virtual_base_hps_ocr == MAP_FAILED ) {
