@@ -337,6 +337,8 @@ private: //accesible from ouside the class
     //generate the software addresses of buff0 and buff1
     this->buff0_v = (cpixel*) buffer_v;
     this->buff1_v = (cpixel*)((uint8_t*)buffer_v + sizeof(cpixel)*this->img_width);
+    //First line will be saved in buff0
+    this->current_buff_v = this->buff0_v; 
     
     //generate physical addresses and save the into the avalon_camera
     //so image capture knows physical addresses of buff0 and buff1
@@ -360,14 +362,16 @@ private: //accesible from ouside the class
     if (counter == 0) return -1;
     
     //Now the component is in STandby (state1). Counters and full buffer 
-    //flags are automatically reset in hardware.
+    //in image_capture component flags are automatically reset in hardware.
+    //Reset the registers saving rising edges of buff0full and buff1full
+    //in avalon camera.
+    IOWR32(this->address, CAMERA_BUFF0_FULL, 0);
+    IOWR32(this->address, CAMERA_BUFF1_FULL, 0);
     
     //Start the capture (generate a pos flank in start_capture signal)
     IOWR32(this->address, CAMERA_START_CAPTURE, 1);
     IOWR32(this->address, CAMERA_START_CAPTURE, 0);
     
-    //First line will be saved in buff0
-    this->current_buff_v = this->buff0_v; 
     return 0;
  }
  //capture_get_line()
@@ -376,38 +380,39 @@ private: //accesible from ouside the class
  //it gives as return value the pointer of the line just acquired.
  //This buffer should be emptied before the next line is acquired otherwise
  //new data will overwrite the old line. The function checks just after
- //entering the flag of the line that is being acquired. If it is '1' 
- //without any waiting returns error code (0).
+ //entering the flag of the line that is being acquired. 
  //
- // return: pointer of the image line just acquired. 0 if there was some error.
+ // return: pointer of the image line just acquired. 0 if there the line
+ // was already acquired when entering in the function (without any waiting).
+ // returns 1 if there was excesive waiting.
  cpixel* Camera::capture_get_line(void)
  {
     int counter = 100000000;
-    
     //if the camera is now saving in the buff0 (odd lines)
-    if (this->current_buff_v = this->buff0_v)
+    if (this->current_buff_v == this->buff0_v)
     {
-        //check if buff0 is full without waiting (dangerous)
-        if (IORD32(this->address, CAMERA_BUFF0_FULL)) return 0;
+        //check if buff0 is full without waiting 
+        if ((IORD32(this->address, CAMERA_BUFF0_FULL)) == 1) return 0;
         else
-        {
+        { 
             //wait for the line to be acquired
             while((!IORD32(this->address, CAMERA_BUFF0_FULL))&&(counter>0))
             {
                 //ugly way avoid software to get stuck
                 counter--; 
             }
-            if (counter == 0) return 0;
+            if (counter == 0) return (cpixel*)1;
             
-            this->current_buff_v = this->buff1_v;
-            return this->buff0_v;          
+            IOWR32(this->address, CAMERA_BUFF0_FULL, 0); //reset the flag
+            this->current_buff_v = this->buff1_v;//change the acquisition buffer
+            return this->buff0_v; //return address of the current acquired line         
         }
     }
     //if the camera is now saving in the buff1 (even lines)
     else
     {
-        //check if buff1 is full without waiting (dangerous)
-        if (IORD32(this->address, CAMERA_BUFF1_FULL)) return 0;
+        //check if buff1 is full without waiting 
+        if ((IORD32(this->address, CAMERA_BUFF1_FULL)) == 1) return 0;
         else
         {
             //wait for the line to be acquired
@@ -416,13 +421,13 @@ private: //accesible from ouside the class
                 //ugly way avoid software to get stuck
                 counter--; 
             }
-            if (counter == 0) return 0;
+            if (counter == 0) return (cpixel*)1;
             
-            this->current_buff_v = this->buff0_v;
-            return this->buff1_v;          
+            IOWR32(this->address, CAMERA_BUFF1_FULL, 0); //reset the flag
+            this->current_buff_v = this->buff0_v;//change the acquisition buffer
+            return this->buff1_v; //return address of the current acquired line         
         }
     }
-    
  }
  
  //reset

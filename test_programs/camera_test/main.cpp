@@ -6,7 +6,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <inttypes.h>
-#include <stdlib.h> // atoi() 
+#include <stdlib.h> // atoi()
 // DS-5 libraries. They are placed at <DS-5-path>/embedded/ip/altera/hps/altera_hps/hwlib/include
 //#include "hwlib.h"
 //#include "soc_cv_av/socal/socal.h"
@@ -39,7 +39,6 @@ int main(int argc, char **argv) {
     void *virtual_base;
     int fd;
     void *camera_virtual_address;
-    //void *dipsw_virtual_address;
     
     // Open the device file for accessing the physical memory.
     if( ( fd = open( "/dev/mem", ( O_RDWR | O_SYNC ) ) ) == -1 ) {

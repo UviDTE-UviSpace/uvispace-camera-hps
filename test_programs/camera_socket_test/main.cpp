@@ -86,6 +86,14 @@ int main(int argc, char **argv) {
             //image_line[j].G
             //image_line[j].B
             //image_line[j].Gray
+            if ((i==0)&&(j<10))
+            printf("pix[%d,%d]:  R-%X  G-%X  B-%X  Gray-%X\n",
+            i,
+            j,
+            image_line[j].R,
+            image_line[j].G,
+            image_line[j].B,
+            image_line[j].Gray);
         }
     }
     
