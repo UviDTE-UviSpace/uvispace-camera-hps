@@ -353,7 +353,7 @@ private: //accesible from ouside the class
     
     //Wait until Standby signal is 1. Its the way to ensure that the component
     //is not in reset or acquiring a signal.
-    int counter = 100000000;
+    int counter = 10000000;
     while((!(IORD32(this->address, CAMERA_CAPTURE_STANDBY)))&&(counter>0))
     {
         //ugly way avoid software to get stuck
@@ -387,7 +387,7 @@ private: //accesible from ouside the class
  // returns 1 if there was excesive waiting.
  cpixel* Camera::capture_get_line(void)
  {
-    int counter = 100000000;
+    int counter = 10000000;
     //if the camera is now saving in the buff0 (odd lines)
     if (this->current_buff_v == this->buff0_v)
     {

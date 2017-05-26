@@ -86,18 +86,22 @@ int main(int argc, char **argv) {
             //image_line[j].G
             //image_line[j].B
             //image_line[j].Gray
-            if ((i==0)&&(j<10))
-            printf("pix[%d,%d]:  R-%X  G-%X  B-%X  Gray-%X\n",
-            i,
-            j,
-            image_line[j].R,
-            image_line[j].G,
-            image_line[j].B,
-            image_line[j].Gray);
+            
+            //Print example
+            // if ((i==0)&&(j==0)){
+            // printf("image_line:%8Xu, vocr:%8Xu\n",  (unsigned int) image_line, (unsigned int)virtual_base_hps_ocr);
+            // printf("pix[%d,%d]:  R %2X  G %2X   B %2X   Gray %2X\n",
+            // i,
+            // j,
+            // image_line[j].R,
+            // image_line[j].G,
+            // image_line[j].B,
+            // image_line[j].Gray);
+            // }
         }
     }
+    image_line = (cpixel*)virtual_base_hps_ocr;
     
-   
     // clean up the memory mapping and exit
     if( munmap( virtual_base_fpga, HW_REGS_SPAN ) != 0 ) {
         printf( "ERROR: munmap() failed...\n" );
