@@ -61,48 +61,6 @@ Default values of some config registers
 #define CONFIG_EXPOSURE_DEFAULT                  1984
 
 /* 
-Macro functions for RD/WR the registers
-*/ 
-//
-#define IOWR_CAMERA_START_CAPTURE(base, dat)    IOWR32(base, CAMERA_START_CAPTURE, dat)
-#define IORD_CAMERA_START_CAPTURE(base)         IORD32(base, CAMERA_START_CAPTURE)
-#define IOWR_CAMERA_CAPTURE_WIDTH(base, dat)    IOWR32(base, CAMERA_CAPTURE_WIDTH, dat)
-#define IORD_CAMERA_CAPTURE_WIDTH(base)         IORD32(base, CAMERA_CAPTURE_WIDTH)
-#define IOWR_CAMERA_CAPTURE_HEIGHT(base, dat)   IOWR32(base, CAMERA_CAPTURE_HEIGHT, dat)
-#define IORD_CAMERA_CAPTURE_HEIGHT(base)        IORD32(base, CAMERA_CAPTURE_HEIGHT)
-#define IOWR_CAMERA_BUFF0(base, dat)            IOWR32(base, CAMERA_BUFF0, dat)
-#define IORD_CAMERA_BUFF0(base)                 IORD32(base, CAMERA_BUFF0)
-#define IOWR_CAMERA_BUFF1(base, dat)            IOWR32(base, CAMERA_BUFF1, dat)
-#define IORD_CAMERA_BUFF1(base)                 IORD32(base, CAMERA_BUFF1)
-#define IOWR_CAMERA_BUFF0FULL(base, dat)        IOWR32(base, CAMERA_BUFF0_FULL, dat)
-#define IORD_CAMERA_BUFF0FULL(base)             IORD32(base, CAMERA_BUFF0_FULL)
-#define IOWR_CAMERA_BUFF1FULL(base, dat)        IOWR32(base, CAMERA_BUFF1_FULL, dat)
-#define IORD_CAMERA_BUFF1FULL(base)             IORD32(base, CAMERA_BUFF1_FULL)
-#define IORD_CAMERA_CAPTURE_STANDBY(base)       IORD32(base, CAMERA_CAPTURE_STANDBY)
-//
-#define IORD_CAMERA_WIDTH(base)                 IORD32(base, ADDR_WIDTH)
-#define IOWR_CAMERA_WIDTH(base, dat)            IOWR32(base, ADDR_WIDTH, dat)
-#define IORD_CAMERA_HEIGHT(base)                IORD32(base, ADDR_HEIGHT)
-#define IOWR_CAMERA_HEIGHT(base, dat)           IOWR32(base, ADDR_HEIGHT, dat)
-#define IORD_CAMERA_START_ROW(base)             IORD32(base, ADDR_START_ROW)
-#define IOWR_CAMERA_START_ROW(base, dat)        IOWR32(base, ADDR_START_ROW, dat)
-#define IORD_CAMERA_START_COLUMN(base)          IORD32(base, ADDR_START_COLUMN)
-#define IOWR_CAMERA_START_COLUMN(base, dat)     IOWR32(base, ADDR_START_COLUMN, dat)
-#define IORD_CAMERA_ROW_SIZE(base)              IORD32(base, ADDR_ROW_SIZE)
-#define IOWR_CAMERA_ROW_SIZE(base, dat)         IOWR32(base, ADDR_ROW_SIZE, dat)
-#define IORD_CAMERA_COLUMN_SIZE(base)           IORD32(base, ADDR_COLUMN_SIZE)
-#define IOWR_CAMERA_COLUMN_SIZE(base, dat)      IOWR32(base, ADDR_COLUMN_SIZE, dat)
-#define IORD_CAMERA_ROW_MODE(base)              IORD32(base, ADDR_ROW_MODE)
-#define IOWR_CAMERA_ROW_MODE(base, dat)         IOWR32(base, ADDR_ROW_MODE, dat)
-#define IORD_CAMERA_COLUMN_MODE(base)           IORD32(base, ADDR_COLUMN_MODE)
-#define IOWR_CAMERA_COLUMN_MODE(base, dat)      IOWR32(base, ADDR_COLUMN_MODE, dat)
-#define IORD_CAMERA_EXPOSURE(base)              IORD32(base, ADDR_EXPOSURE)
-#define IOWR_CAMERA_EXPOSURE(base, dat)         IOWR32(base, ADDR_EXPOSURE, dat)
-//
-#define IORD_CAMERA_SOFT_RESET(base)            IORD32(base, CAMERA_SOFT_RESET)
-#define IOWR_CAMERA_SOFT_RESET(base, dat)       IOWR32(base, CAMERA_SOFT_RESET, dat)
-
-/* 
 Struct to help the acquisition of the image
 */ 
 //This is the size in bits of a color component (R,G,B or Gray)
