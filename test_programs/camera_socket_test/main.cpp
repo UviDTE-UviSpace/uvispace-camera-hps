@@ -27,6 +27,10 @@
 #define HPS_OCR_SPAM (64*1024) //64kB
 #define HPS_OCR_MASK ( HPS_OCR_SPAM - 1 )
 
+//Image properties
+#define IMAGE_WIDTH 640
+#define IMAGE_HEIGHT 480
+
 int main(int argc, char **argv) {
     
     int fd;
@@ -56,52 +60,67 @@ int main(int argc, char **argv) {
     // Map the physical HPS On-Chip RAM into the virtual address space
     // of this application to have access to it.
     virtual_base_hps_ocr = mmap(NULL, HPS_OCR_SPAM, (PROT_READ | PROT_WRITE),
-                        MAP_SHARED, fd, HPS_OCR_SPAM);
+                        MAP_SHARED, fd, HPS_OCR_BASE);
     if( virtual_base_hps_ocr == MAP_FAILED ) {
         printf( "ERROR: mmap() failed...\n" );
         close( fd );
         return( 1 );
     }
     
-    //----------WAIT FOR CODES FROM INTERNET AND RESPOND ACCORDINGLY---------//
+    //----------CAPTURE IMAGE AND SHOW---------//
     //Initialize camera
-    Camera cam(camera_virtual_address);
-    cam.config_set_default();
-    cam.config_update();
+    Camera cam(camera_virtual_address); //default configuration on creation
+    cam.config_set_width(IMAGE_WIDTH); //change width
+    cam.config_set_height(IMAGE_HEIGHT); //change height
+    cam.config_update(); //update config changes so new config takes effect
     
-    //Code showing how to capture one image
-    cpixel* image_line;
-    cam.capture_start(virtual_base_hps_ocr, (void*)HPS_OCR_BASE);
-    int i,j;
-    for(i=0; i<cam.img_height; i++) //for every line
+    //Capture one image
+    cpixel image[IMAGE_HEIGHT][IMAGE_WIDTH];
+    cam.capture_set_buffer(virtual_base_hps_ocr, (void*)HPS_OCR_BASE);
+    int error = cam.capture_get_image(&image[0][0]);
+    if (error == 1)
     {
-        image_line = cam.capture_get_line(); //wait till line is captured
-        for(j=0; j<cam.img_width; j++) //for every pixel in the line
+        printf("Error starting the capture (component does not answer)\n");
+        printf("Image_capture is in reset or not connected to the bus\n");
+        printf("Return from the application...\n");
+        return 0;
+    }
+    else if (error == 2)
+    {
+        printf("Error, line already acquired when entering capture_get_line.\n");
+        printf("Possible loss of data. The processor did too much in between two \n");
+        printf("calls to  capture_get_line. Try to reduce frame rate.\n");
+        printf("Return from the application...\n");
+        return 0;
+    }
+    else if (error == 3)
+    {
+        printf("Error, Too much waiting for a new line. Looks like no video)\n");
+        printf("stream is there. Maybe the video stream is in reset state?\n");
+        printf("Return from the application...\n");
+        return 0;
+    }
+    
+    //Print some pixels from image
+     printf("Image was successfully captured.\n");
+    int i,j;
+    for (i=0; i<IMAGE_HEIGHT; i++)
+    {
+        for (j=0; j<IMAGE_WIDTH; j++)
         {
-            //you have access to each pixel in the line through:
-            //image_line[j] 32-bit word: MSB[Gray, B, G, R]LSB
-            
-            //or individual access to each 8-bit component:
-            //image_line[j].R 
-            //image_line[j].G
-            //image_line[j].B
-            //image_line[j].Gray
-            
-            //Print example
-            // if ((i==0)&&(j==0)){
-            // printf("image_line:%8Xu, vocr:%8Xu\n",  (unsigned int) image_line, (unsigned int)virtual_base_hps_ocr);
-            // printf("pix[%d,%d]:  R %2X  G %2X   B %2X   Gray %2X\n",
-            // i,
-            // j,
-            // image_line[j].R,
-            // image_line[j].G,
-            // image_line[j].B,
-            // image_line[j].Gray);
-            // }
+            if ((i<2)&&(j<2))
+            {
+                printf("pix[%d,%d]:  R %2X  G %2X   B %2X   Gray %2X\n",
+                i,
+                j,
+                image[i][j].R,
+                image[i][j].G,
+                image[i][j].B,
+                image[i][j].Gray);
+            }
         }
     }
-    image_line = (cpixel*)virtual_base_hps_ocr;
-    
+            
     // clean up the memory mapping and exit
     if( munmap( virtual_base_fpga, HW_REGS_SPAN ) != 0 ) {
         printf( "ERROR: munmap() failed...\n" );
