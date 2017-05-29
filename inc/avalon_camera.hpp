@@ -57,7 +57,7 @@ Default values of some config registers
 #define CONFIG_START_COLUMN_DEFAULT              0
 #define CONFIG_ROW_SIZE_DEFAULT                  1919
 #define CONFIG_COLUMN_SIZE_DEFAULT               2559
-#define CONFIG_ROW_MODE_DEFAULT                  17
+#define CONFIG_ROW_MODE_DEFAULT                  1
 #define CONFIG_COLUMN_MODE_DEFAULT               17
 #define CONFIG_EXPOSURE_DEFAULT                  1984
 
