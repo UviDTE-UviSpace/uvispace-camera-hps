@@ -59,7 +59,7 @@ Default values of some config registers
 #define CONFIG_COLUMN_SIZE_DEFAULT               2559
 #define CONFIG_ROW_MODE_DEFAULT                  1
 #define CONFIG_COLUMN_MODE_DEFAULT               17
-#define CONFIG_EXPOSURE_DEFAULT                  1984
+#define CONFIG_EXPOSURE_DEFAULT                  1023 
 
 /*
 Camera capture error codes
@@ -67,6 +67,11 @@ Camera capture error codes
 #define CAMERA_NO_REPLY 1
 #define CAMERA_CAPTURE_GET_LINE_BUFFER_FULL_NO_WAIT 2
 #define CAMERA_CAPTURE_GET_LINE_TIMEOUT 3
+
+/*
+Number of lines to acquire in one buffer
+*/
+#define LINES_PER_BUFF 8
 
 /*
 Struct to help the acquisition of the image
@@ -335,14 +340,14 @@ private: //not accesible from ouside the class
     int error;
     int i;
     cpixel* line;
-    int line_size_B = this->img_width * sizeof(cpixel); //line size in Bytes
+    int line_size_B = this->img_width * LINES_PER_BUFF * sizeof(cpixel); //line size in Bytes
 
     //Start capture
     error = this->capture_start();
     if (error == CAMERA_NO_REPLY) return CAMERA_NO_REPLY;
 
     //Capture lines
-    for(i=0; i<this->img_height; i++) //for every line
+    for(i=0; i<this->img_height/LINES_PER_BUFF; i++) //for every line
     {
         //wait till line is captured
         error = this->capture_get_line(line);
@@ -357,7 +362,7 @@ private: //not accesible from ouside the class
         //Copy the line from buffer for lines to big buffer in processor
         //memcpy is the fastest method to copy data (for dma a driver is needed)
         //void * memcpy ( void * destination, const void * source, size_t num );
-        memcpy ((void*)&image[i*this->img_width], (void*)line, line_size_B );
+        memcpy ((void*)&image[i*this->img_width*LINES_PER_BUFF], (void*)line, line_size_B );
     }
     return 0;
  }
@@ -385,7 +390,7 @@ private: //not accesible from ouside the class
     //generate the software addresses of buff0 and buff1
     this->buff0_v = (cpixel*) this->buff_v;
     this->buff1_v = (cpixel*)((uint8_t*)this->buff_v
-                    + sizeof(cpixel)*this->img_width);
+                    + sizeof(cpixel)*this->img_width*LINES_PER_BUFF);
     //First line will be saved in buff0
     this->current_buff_v = this->buff0_v;
 
@@ -393,13 +398,13 @@ private: //not accesible from ouside the class
     //so image capture knows physical addresses of buff0 and buff1
     void* buff0_p = this->buff_p;
     void* buff1_p = (void*)((uint8_t*)this->buff_p
-                    + sizeof(cpixel)*this->img_width);
+                    + sizeof(cpixel)*this->img_width*LINES_PER_BUFF);
     IOWR32(this->address, CAMERA_BUFF0, buff0_p);
     IOWR32(this->address, CAMERA_BUFF1, buff1_p);
 
     //Indicate the image size to the capture_image component
-    IOWR32(this->address, CAMERA_CAPTURE_WIDTH, this->img_width);
-    IOWR32(this->address, CAMERA_CAPTURE_HEIGHT, this->img_height);
+    IOWR32(this->address, CAMERA_CAPTURE_WIDTH, this->img_width*LINES_PER_BUFF);
+    IOWR32(this->address, CAMERA_CAPTURE_HEIGHT, this->img_height/LINES_PER_BUFF);
 
     //Wait until Standby signal is 1. Its the way to ensure that the component
     //is not in reset or acquiring a signal.
