@@ -24,11 +24,16 @@
 #define IMAGE_WIDTH 640
 #define IMAGE_HEIGHT 480
 
+enum image_color {
+    image_color = 1,
+    image_grayscale = 2
+};
+
 class camera_server: public abstract_server {
 public:
     camera_server(int port);
 protected:
     std::string process_request(std::string request);
 private:
-    std::string get_image();
+    std::string get_image(const int ic);
 };

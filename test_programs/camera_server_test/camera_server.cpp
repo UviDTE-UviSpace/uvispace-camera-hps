@@ -4,14 +4,16 @@ camera_server::camera_server(int port) : abstract_server(port) {
 }
 
 std::string camera_server::process_request(std::string request) {
-    if (request == "get_image") {
-        return this->get_image();
+    if (request == "get_color") {
+        return this->get_image(image_color);
+    } if (request == "get_gray") {
+        return this->get_image(image_grayscale);
     } else {
         return "unknown command\n";
     }
 }
 
-std::string camera_server::get_image() {
+std::string camera_server::get_image(const int ic) {
     int fd;
     void *virtual_base_fpga;
     void *camera_virtual_address;
@@ -51,7 +53,7 @@ std::string camera_server::get_image() {
 
     // Capture one image
     cpixel image[IMAGE_HEIGHT][IMAGE_WIDTH];
-    cam.capture_set_buffer(virtual_base_hps_ocr, (void*)HPS_OCR_BASE);
+    cam.capture_set_buffer(virtual_base_hps_ocr, (void*) HPS_OCR_BASE);
     int error = cam.capture_get_image(&image[0][0]);
     if (error == CAMERA_NO_REPLY) {
         std::cout << "Error starting the capture (component does not answer)" << std::endl;
@@ -75,9 +77,19 @@ std::string camera_server::get_image() {
     std::cout << "Image was successfully captured." << std::endl;
 
     std::string response = "";
-    for (int i=0; i<IMAGE_HEIGHT; i++) {
-        for (int j=0; j<IMAGE_WIDTH; j++) {
-            response += image[i][j].Gray;
+    if (ic == image_color) {
+        for (int i=0; i<IMAGE_HEIGHT; i++) {
+            for (int j=0; j<IMAGE_WIDTH; j++) {
+                response += image[i][j].R;
+                response += image[i][j].G;
+                response += image[i][j].B;
+            }
+        }
+    } else if (ic == image_grayscale) {
+        for (int i=0; i<IMAGE_HEIGHT; i++) {
+            for (int j=0; j<IMAGE_WIDTH; j++) {
+                response += image[i][j].Gray;
+            }
         }
     }
 
