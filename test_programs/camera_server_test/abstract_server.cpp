@@ -1,8 +1,6 @@
 #include "abstract_server.hpp"
 
-abstract_server::abstract_server(int port) {
-    this->port = port;
-}
+abstract_server::abstract_server(int port) : port(port) {}
 
 int abstract_server::run() {
     struct sockaddr_in server_addr;
