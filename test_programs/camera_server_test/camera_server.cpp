@@ -47,9 +47,6 @@ std::string camera_server::get_image(const int ic) {
 
     // Initialize camera
     avalon_camera cam(camera_virtual_address); //default configuration on creation
-    cam.config_set_width(IMAGE_WIDTH); //change width
-    cam.config_set_height(IMAGE_HEIGHT); //change height
-    cam.config_update(); //update config changes so new config takes effect
 
     // Capture one image
     cpixel image[IMAGE_HEIGHT][IMAGE_WIDTH];
