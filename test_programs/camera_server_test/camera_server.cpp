@@ -1,19 +1,19 @@
 #include "camera_server.hpp"
 
-camera_server::camera_server(int port) : abstract_server(port) {
+camera_server::camera_server::camera_server(int port) : abstract_server(port) {
 }
 
-std::string camera_server::process_request(std::string request) {
+std::string camera_server::camera_server::process_request(std::string request) {
     if (request == "get_color") {
-        return this->get_image(image_color);
+        return this->get_image(image_model::rgb);
     } if (request == "get_gray") {
-        return this->get_image(image_grayscale);
+        return this->get_image(image_model::grayscale);
     } else {
         return "unknown command\n";
     }
 }
 
-std::string camera_server::get_image(const int ic) {
+std::string camera_server::camera_server::get_image(const image_model model) {
     int fd;
     void *virtual_base_fpga;
     void *camera_virtual_address;
@@ -74,7 +74,7 @@ std::string camera_server::get_image(const int ic) {
     std::cout << "Image was successfully captured." << std::endl;
 
     std::string response = "";
-    if (ic == image_color) {
+    if (model == image_model::rgb) {
         for (int i=0; i<IMAGE_HEIGHT; i++) {
             for (int j=0; j<IMAGE_WIDTH; j++) {
                 response += image[i][j].R;
@@ -82,7 +82,7 @@ std::string camera_server::get_image(const int ic) {
                 response += image[i][j].B;
             }
         }
-    } else if (ic == image_grayscale) {
+    } else if (model == image_model::grayscale) {
         for (int i=0; i<IMAGE_HEIGHT; i++) {
             for (int j=0; j<IMAGE_WIDTH; j++) {
                 response += image[i][j].Gray;
