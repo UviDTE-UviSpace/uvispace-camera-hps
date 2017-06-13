@@ -1,115 +1,110 @@
 #include "avalon_camera.hpp"
 
-//class constructor (called when object is created)
 avalon_camera::avalon_camera(void* virtual_address) {
     this->address = virtual_address;
-    this->config_set_default();
+    this->set_default_configuration();
     this->config_update();
 }
 
-//methods to set the camera configuration
-int avalon_camera::config_set_width(uint16_t val) {
-    IOWR32(this->address, ADDR_WIDTH, val);
-    this->img_width = val;
-    return 0;
-}
-
-int avalon_camera::config_set_height(uint16_t val) {
-    IOWR32(this->address, ADDR_HEIGHT, val);
-    this->img_height = val;
-    return 0;
-}
-
-int avalon_camera::config_set_start_row(uint16_t val) {
-    IOWR32(this->address, ADDR_START_ROW, val);
-    return 0;
-}
-
-int avalon_camera::config_set_start_column(uint16_t val) {
-    IOWR32(this->address, ADDR_START_COLUMN, val);
-    return 0;
-}
-
-int avalon_camera::config_set_row_size(uint16_t val) {
-    IOWR32(this->address, ADDR_ROW_SIZE, val);
-    return 0;
-}
-
-int avalon_camera::config_set_column_size(uint16_t val) {
-    IOWR32(this->address, ADDR_COLUMN_SIZE, val);
-    return 0;
-}
-
-int avalon_camera::config_set_row_mode(uint16_t val) {
-    IOWR32(this->address, ADDR_ROW_MODE, val);
-    return 0;
-}
-
-int avalon_camera::config_set_column_mode(uint16_t val) {
-    IOWR32(this->address, ADDR_COLUMN_MODE, val);
-    return 0;
-}
-
-int avalon_camera::config_set_exposure(uint16_t val) {
-    IOWR32(this->address, ADDR_EXPOSURE, val);
-    return 0;
-}
-
-int avalon_camera::config_set_default(void) {
-    this->config_set_width(CONFIG_WIDTH_DEFAULT);
-    this->config_set_height(CONFIG_HEIGHT_DEFAULT);
-    this->config_set_start_row(CONFIG_START_ROW_DEFAULT);
-    this->config_set_start_column(CONFIG_START_COLUMN_DEFAULT);
-    this->config_set_row_size(CONFIG_ROW_SIZE_DEFAULT);
-    this->config_set_column_size(CONFIG_COLUMN_SIZE_DEFAULT);
-    this->config_set_row_mode(CONFIG_ROW_MODE_DEFAULT);
-    this->config_set_column_mode(CONFIG_COLUMN_MODE_DEFAULT);
-    this->config_set_exposure(CONFIG_EXPOSURE_DEFAULT);
-    return 0;
-}
-
-int avalon_camera::config_update(void) {
-    //this function is equal to reset now but in the future
-    //could not be. So use this to update the camera config.
-    this->reset();
-    return 0;
-}
-
-//Methods to get the camera configuration
-uint16_t avalon_camera::config_get_width(void) {
+uint16_t avalon_camera::get_width() {
     return IORD32(this->address, ADDR_WIDTH);
 }
 
-uint16_t avalon_camera::config_get_height(void) {
+void avalon_camera::set_width(uint16_t val) {
+    IOWR32(this->address, ADDR_WIDTH, val);
+    this->img_width = val;
+    return;
+}
+
+uint16_t avalon_camera::get_height() {
     return IORD32(this->address, ADDR_HEIGHT);
 }
 
-uint16_t avalon_camera::config_get_start_row(void) {
+void avalon_camera::set_height(uint16_t val) {
+    IOWR32(this->address, ADDR_HEIGHT, val);
+    this->img_height = val;
+    return;
+}
+
+uint16_t avalon_camera::get_start_row() {
     return IORD32(this->address, ADDR_START_ROW);
 }
 
-uint16_t avalon_camera::config_get_start_column(void) {
+void avalon_camera::set_start_row(uint16_t val) {
+    IOWR32(this->address, ADDR_START_ROW, val);
+    return;
+}
+
+uint16_t avalon_camera::get_start_column() {
     return IORD32(this->address, ADDR_START_COLUMN);
 }
 
-uint16_t avalon_camera::config_get_row_size(void) {
+void avalon_camera::set_start_column(uint16_t val) {
+    IOWR32(this->address, ADDR_START_COLUMN, val);
+    return;
+}
+
+uint16_t avalon_camera::get_row_size() {
     return IORD32(this->address, ADDR_ROW_SIZE);
 }
 
-uint16_t avalon_camera::config_get_column_size(void) {
+void avalon_camera::set_row_size(uint16_t val) {
+    IOWR32(this->address, ADDR_ROW_SIZE, val);
+    return;
+}
+
+uint16_t avalon_camera::get_column_size() {
     return IORD32(this->address, ADDR_COLUMN_SIZE);
 }
 
-uint16_t avalon_camera::config_get_row_mode(void) {
+void avalon_camera::set_column_size(uint16_t val) {
+    IOWR32(this->address, ADDR_COLUMN_SIZE, val);
+    return;
+}
+
+uint16_t avalon_camera::get_row_mode() {
     return IORD32(this->address, ADDR_ROW_MODE);
 }
 
-uint16_t avalon_camera::config_get_column_mode(void) {
+void avalon_camera::set_row_mode(uint16_t val) {
+    IOWR32(this->address, ADDR_ROW_MODE, val);
+    return;
+}
+
+uint16_t avalon_camera::get_column_mode() {
     return IORD32(this->address, ADDR_COLUMN_MODE);
 }
 
-uint16_t avalon_camera::config_get_exposure(void) {
+void avalon_camera::set_column_mode(uint16_t val) {
+    IOWR32(this->address, ADDR_COLUMN_MODE, val);
+    return;
+}
+
+uint16_t avalon_camera::get_exposure() {
     return IORD32(this->address, ADDR_EXPOSURE);
+}
+
+void avalon_camera::set_exposure(uint16_t val) {
+    IOWR32(this->address, ADDR_EXPOSURE, val);
+    return;
+}
+
+void avalon_camera::set_default_configuration() {
+    this->set_width(CONFIG_WIDTH_DEFAULT);
+    this->set_height(CONFIG_HEIGHT_DEFAULT);
+    this->set_start_row(CONFIG_START_ROW_DEFAULT);
+    this->set_start_column(CONFIG_START_COLUMN_DEFAULT);
+    this->set_row_size(CONFIG_ROW_SIZE_DEFAULT);
+    this->set_column_size(CONFIG_COLUMN_SIZE_DEFAULT);
+    this->set_row_mode(CONFIG_ROW_MODE_DEFAULT);
+    this->set_column_mode(CONFIG_COLUMN_MODE_DEFAULT);
+    this->set_exposure(CONFIG_EXPOSURE_DEFAULT);
+    return;
+}
+
+void avalon_camera::config_update() {
+    this->reset();
+    return;
 }
 
 //--Capture image methods
@@ -133,10 +128,10 @@ uint16_t avalon_camera::config_get_exposure(void) {
 //-buffer_p: equivalent physical address for the buffer.
 //
 //return: 0 if success
-int avalon_camera::capture_set_buffer(void* buffer_v, void* buffer_p) {
+void avalon_camera::capture_set_buffer(void* buffer_v, void* buffer_p) {
     this->buff_v = buffer_v;
     this->buff_p = buffer_p;
-    return 0;
+    return;
 }
 
 //capture_get_image
@@ -164,7 +159,7 @@ int avalon_camera::capture_set_buffer(void* buffer_v, void* buffer_p) {
 //          capture_get_line. Try to reduce frame rate.
 //        3 Too much waiting for a new line. Looks like no video
 //          stream is there. Maybe the video stream is in reset state?
-int avalon_camera::capture_get_image(cpixel* image) {
+int avalon_camera::capture_image(cpixel* image) {
     int error;
     int i;
     cpixel* line;

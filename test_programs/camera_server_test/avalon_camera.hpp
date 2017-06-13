@@ -101,7 +101,7 @@ private: //accesible only inside the class
 
     //Size of the image in pixels (screen pixels.
     //dont missunderstand with cam pixels that are usually double)
-    //Filled each time config_set_width and config_set_height are called
+    //Filled each time set_width and set_height are called
     uint16_t img_width;
     uint16_t img_height;
 
@@ -126,40 +126,47 @@ public: //accessible from outside the class
     //registers without resetting the camera. So after using this
     //functions call config_update to reset the camera with the
     //new parameters and actually change the camera behaviour.
-    int config_set_width(uint16_t val);
-    int config_set_height(uint16_t val);
-    int config_set_start_row(uint16_t val);
-    int config_set_start_column(uint16_t val);
-    int config_set_row_size(uint16_t val);
-    int config_set_column_size(uint16_t val);
-    int config_set_row_mode(uint16_t val);
-    int config_set_column_mode(uint16_t val);
-    int config_set_exposure(uint16_t val);
-    int config_set_default(void);
+    uint16_t get_width();
+    void set_width(uint16_t val);
+
+    uint16_t get_height();
+    void set_height(uint16_t val);
+
+    uint16_t get_start_row();
+    void set_start_row(uint16_t val);
+
+    uint16_t get_start_column();
+    void set_start_column(uint16_t val);
+
+    uint16_t get_row_size();
+    void set_row_size(uint16_t val);
+
+    uint16_t get_column_size();
+    void set_column_size(uint16_t val);
+
+    uint16_t get_row_mode();
+    void set_row_mode(uint16_t val);
+
+    uint16_t get_column_mode();
+    void set_column_mode(uint16_t val);
+
+    uint16_t get_exposure();
+    void set_exposure(uint16_t val);
+
+    void set_default_configuration();
     //config_update loads new configuration into the camera and resets
     //the video stream.
-    int config_update(void);
-
-    //methods to get the camera configuration
-    uint16_t config_get_width(void);
-    uint16_t config_get_height(void);
-    uint16_t config_get_start_row(void);
-    uint16_t config_get_start_column(void);
-    uint16_t config_get_row_size(void);
-    uint16_t config_get_column_size(void);
-    uint16_t config_get_row_mode(void);
-    uint16_t config_get_column_mode(void);
-    uint16_t config_get_exposure(void);
+    void config_update();
 
     //methods to capture an image into the processor
-    int capture_set_buffer(void* buffer_v, void* buffer_p);
-    int capture_get_image(cpixel* image);
+    void capture_set_buffer(void* buffer_v, void* buffer_p);
+    int capture_image(cpixel* image);
 private:
-    int capture_start(void);
+    int capture_start();
     int capture_get_line(cpixel*& line);
     //resets and removes soft reset to reset the video stream
     //it is private. not intended to be used by the user yet
-    int reset(void);
+    int reset();
 };
 
 #endif //__AVALON_CAMERA_H

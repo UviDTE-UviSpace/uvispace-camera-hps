@@ -51,7 +51,7 @@ std::string camera_server::get_image(const int ic) {
     // Capture one image
     cpixel image[IMAGE_HEIGHT][IMAGE_WIDTH];
     cam.capture_set_buffer(virtual_base_hps_ocr, (void*) HPS_OCR_BASE);
-    int error = cam.capture_get_image(&image[0][0]);
+    int error = cam.capture_image(&image[0][0]);
     if (error == CAMERA_NO_REPLY) {
         std::cout << "Error starting the capture (component does not answer)" << std::endl;
         std::cout << "Image_capture is in reset or not connected to the bus" << std::endl;
