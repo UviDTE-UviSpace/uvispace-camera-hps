@@ -51,19 +51,20 @@ std::string camera_server::camera_server::get_image(const image_model model) {
     // Capture one image
     cpixel image[IMAGE_HEIGHT][IMAGE_WIDTH];
     cam.capture_set_buffer(virtual_base_hps_ocr, (void*) HPS_OCR_BASE);
-    int error = cam.capture_image(&image[0][0]);
-    if (error == CAMERA_NO_REPLY) {
+    try {
+        cam.capture_image(&image[0][0]);
+    } catch (exception::camera_no_reply& e) {
         std::cout << "Error starting the capture (component does not answer)" << std::endl;
         std::cout << "Image_capture is in reset or not connected to the bus" << std::endl;
         std::cout << "Return from the application..." << std::endl;
         return "";
-    } else if (error == CAMERA_CAPTURE_GET_LINE_BUFFER_FULL_NO_WAIT) {
+    } catch (exception::capture_buffer_full& e) {
         std::cout << "Error, line already acquired when entering capture_get_line." << std::endl;
         std::cout << "Possible loss of data. The processor did too much in between two" << std::endl;
         std::cout << "calls to  capture_get_line. Try to reduce frame rate." << std::endl;
         std::cout << "Return from the application..." << std::endl;
         return "";
-    } else if (error == CAMERA_CAPTURE_GET_LINE_TIMEOUT) {
+    } catch (exception::capture_timeout& e) {
         std::cout << "Error, Too much waiting for a new line. Looks like no video)" << std::endl;
         std::cout << "stream is there. Maybe the video stream is in reset state?" << std::endl;
         std::cout << "Return from the application..." << std::endl;

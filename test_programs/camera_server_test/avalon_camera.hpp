@@ -7,6 +7,7 @@
 #include <inttypes.h>//for uint16_t
 #include <string.h>//for memcpy
 #include <iostream>
+#include <stdexcept>
 
 /*
 Macros for accessing an address map with a data bus size of 8, 16 or 32 bits.
@@ -160,13 +161,28 @@ public: //accessible from outside the class
 
     //methods to capture an image into the processor
     void capture_set_buffer(void* buffer_v, void* buffer_p);
-    int capture_image(cpixel* image);
+    void capture_image(cpixel* image);
 private:
-    int capture_start();
-    int capture_get_line(cpixel*& line);
+    void capture_start();
+    void capture_get_line(cpixel*& line);
     //resets and removes soft reset to reset the video stream
     //it is private. not intended to be used by the user yet
     int reset();
 };
+namespace exception {
+    class camera_no_reply : public std::runtime_error {
+    public:
+        camera_no_reply() : std::runtime_error("camera_no_reply") {}
+    };
+    class capture_buffer_full : public std::runtime_error {
+    public:
+        capture_buffer_full() : std::runtime_error("capture_buffer_full") {}
+    };
+    class capture_timeout : public std::runtime_error {
+    public:
+        capture_timeout() : std::runtime_error("capture_timeout") {}
+    };
+}
+
 
 #endif //__AVALON_CAMERA_H
