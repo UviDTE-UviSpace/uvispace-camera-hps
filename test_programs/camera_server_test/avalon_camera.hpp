@@ -25,30 +25,7 @@ Macros for accessing an address map with a data bus size of 8, 16 or 32 bits.
 #define IORD32(base, offset)            (* ((uint32_t*)((uint8_t*)base + offset*4)))
 #endif
 
-/*
-Internal address map of avalon camera (32-bit addresses)
-*/
-// registers to control image_capture component
-#define CAMERA_START_CAPTURE           0x00
-#define CAMERA_CAPTURE_WIDTH           0x01
-#define CAMERA_CAPTURE_HEIGHT          0x02
-#define CAMERA_BUFF0                   0x03
-#define CAMERA_BUFF1                   0x04
-#define CAMERA_BUFF0_FULL              0x05
-#define CAMERA_BUFF1_FULL              0x06
-#define CAMERA_CAPTURE_STANDBY         0x07
-// registers to control camera_config component
-#define ADDR_WIDTH                     0x09
-#define ADDR_HEIGHT                    0x0a
-#define ADDR_START_ROW                 0x0b
-#define ADDR_START_COLUMN              0x0c
-#define ADDR_ROW_SIZE                  0x0d
-#define ADDR_COLUMN_SIZE               0x0e
-#define ADDR_ROW_MODE                  0x0f
-#define ADDR_COLUMN_MODE               0x10
-#define ADDR_EXPOSURE                  0x11
-// soft_reset signal
-#define CAMERA_SOFT_RESET              0x1f
+
 
 /*
 Default values of some config registers
@@ -64,16 +41,36 @@ Default values of some config registers
 #define CONFIG_EXPOSURE_DEFAULT                  1023
 
 /*
-Camera capture error codes
-*/
-#define CAMERA_NO_REPLY 1
-#define CAMERA_CAPTURE_GET_LINE_BUFFER_FULL_NO_WAIT 2
-#define CAMERA_CAPTURE_GET_LINE_TIMEOUT 3
-
-/*
 Number of lines to acquire in one buffer
 */
 #define LINES_PER_BUFF 8
+
+namespace reg {
+    namespace capture {
+        constexpr uint8_t start = UINT8_C(0x00);
+        constexpr uint8_t width = UINT8_C(0x01);
+        constexpr uint8_t height = UINT8_C(0x02);
+        constexpr uint8_t buff0 = UINT8_C(0x03);
+        constexpr uint8_t buff1 = UINT8_C(0x04);
+        constexpr uint8_t buff0_full = UINT8_C(0x05);
+        constexpr uint8_t buff1_full = UINT8_C(0x06);
+        constexpr uint8_t standby = UINT8_C(0x07);
+    }
+    namespace config {
+        constexpr uint8_t width = UINT8_C(0x09);
+        constexpr uint8_t height = UINT8_C(0x0a);
+        constexpr uint8_t row_start = UINT8_C(0x0b);
+        constexpr uint8_t column_start = UINT8_C(0x0c);
+        constexpr uint8_t row_end = UINT8_C(0x0d);
+        constexpr uint8_t column_end = UINT8_C(0x0e);
+        constexpr uint8_t row_mode = UINT8_C(0x0f);
+        constexpr uint8_t column_mode = UINT8_C(0x10);
+        constexpr uint8_t exposure = UINT8_C(0x11);
+    }
+    namespace reset {
+        constexpr uint8_t soft = UINT8_C(0x1f);
+    }
+}
 
 /*
 Struct to help the acquisition of the image
@@ -101,7 +98,7 @@ private: //accesible only inside the class
     void* address;
 
     //Size of the image in pixels (screen pixels.
-    //dont missunderstand with cam pixels that are usually double)
+    //dont misunderstand with cam pixels that are usually double)
     //Filled each time set_width and set_height are called
     uint16_t img_width;
     uint16_t img_height;
@@ -133,17 +130,17 @@ public: //accessible from outside the class
     uint16_t get_height();
     void set_height(uint16_t val);
 
-    uint16_t get_start_row();
-    void set_start_row(uint16_t val);
+    uint16_t get_row_start();
+    void set_row_start(uint16_t val);
 
-    uint16_t get_start_column();
-    void set_start_column(uint16_t val);
+    uint16_t get_column_start();
+    void set_column_start(uint16_t val);
 
-    uint16_t get_row_size();
-    void set_row_size(uint16_t val);
+    uint16_t get_row_end();
+    void set_row_end(uint16_t val);
 
-    uint16_t get_column_size();
-    void set_column_size(uint16_t val);
+    uint16_t get_column_end();
+    void set_column_end(uint16_t val);
 
     uint16_t get_row_mode();
     void set_row_mode(uint16_t val);

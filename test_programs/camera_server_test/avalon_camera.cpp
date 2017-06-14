@@ -7,95 +7,95 @@ avalon_camera::avalon_camera(void* virtual_address) {
 }
 
 uint16_t avalon_camera::get_width() {
-    return IORD32(this->address, ADDR_WIDTH);
+    return IORD32(this->address, reg::config::width);
 }
 
 void avalon_camera::set_width(uint16_t val) {
-    IOWR32(this->address, ADDR_WIDTH, val);
+    IOWR32(this->address, reg::config::width, val);
     this->img_width = val;
     return;
 }
 
 uint16_t avalon_camera::get_height() {
-    return IORD32(this->address, ADDR_HEIGHT);
+    return IORD32(this->address, reg::config::height);
 }
 
 void avalon_camera::set_height(uint16_t val) {
-    IOWR32(this->address, ADDR_HEIGHT, val);
+    IOWR32(this->address, reg::config::height, val);
     this->img_height = val;
     return;
 }
 
-uint16_t avalon_camera::get_start_row() {
-    return IORD32(this->address, ADDR_START_ROW);
+uint16_t avalon_camera::get_row_start() {
+    return IORD32(this->address, reg::config::row_start);
 }
 
-void avalon_camera::set_start_row(uint16_t val) {
-    IOWR32(this->address, ADDR_START_ROW, val);
+void avalon_camera::set_row_start(uint16_t val) {
+    IOWR32(this->address, reg::config::row_start, val);
     return;
 }
 
-uint16_t avalon_camera::get_start_column() {
-    return IORD32(this->address, ADDR_START_COLUMN);
+uint16_t avalon_camera::get_column_start() {
+    return IORD32(this->address, reg::config::column_start);
 }
 
-void avalon_camera::set_start_column(uint16_t val) {
-    IOWR32(this->address, ADDR_START_COLUMN, val);
+void avalon_camera::set_column_start(uint16_t val) {
+    IOWR32(this->address, reg::config::column_start, val);
     return;
 }
 
-uint16_t avalon_camera::get_row_size() {
-    return IORD32(this->address, ADDR_ROW_SIZE);
+uint16_t avalon_camera::get_row_end() {
+    return IORD32(this->address, reg::config::row_end);
 }
 
-void avalon_camera::set_row_size(uint16_t val) {
-    IOWR32(this->address, ADDR_ROW_SIZE, val);
+void avalon_camera::set_row_end(uint16_t val) {
+    IOWR32(this->address, reg::config::row_end, val);
     return;
 }
 
-uint16_t avalon_camera::get_column_size() {
-    return IORD32(this->address, ADDR_COLUMN_SIZE);
+uint16_t avalon_camera::get_column_end() {
+    return IORD32(this->address, reg::config::column_end);
 }
 
-void avalon_camera::set_column_size(uint16_t val) {
-    IOWR32(this->address, ADDR_COLUMN_SIZE, val);
+void avalon_camera::set_column_end(uint16_t val) {
+    IOWR32(this->address, reg::config::column_end, val);
     return;
 }
 
 uint16_t avalon_camera::get_row_mode() {
-    return IORD32(this->address, ADDR_ROW_MODE);
+    return IORD32(this->address, reg::config::row_mode);
 }
 
 void avalon_camera::set_row_mode(uint16_t val) {
-    IOWR32(this->address, ADDR_ROW_MODE, val);
+    IOWR32(this->address, reg::config::row_mode, val);
     return;
 }
 
 uint16_t avalon_camera::get_column_mode() {
-    return IORD32(this->address, ADDR_COLUMN_MODE);
+    return IORD32(this->address, reg::config::column_mode);
 }
 
 void avalon_camera::set_column_mode(uint16_t val) {
-    IOWR32(this->address, ADDR_COLUMN_MODE, val);
+    IOWR32(this->address, reg::config::column_mode, val);
     return;
 }
 
 uint16_t avalon_camera::get_exposure() {
-    return IORD32(this->address, ADDR_EXPOSURE);
+    return IORD32(this->address, reg::config::exposure);
 }
 
 void avalon_camera::set_exposure(uint16_t val) {
-    IOWR32(this->address, ADDR_EXPOSURE, val);
+    IOWR32(this->address, reg::config::exposure, val);
     return;
 }
 
 void avalon_camera::set_default_configuration() {
     this->set_width(CONFIG_WIDTH_DEFAULT);
     this->set_height(CONFIG_HEIGHT_DEFAULT);
-    this->set_start_row(CONFIG_START_ROW_DEFAULT);
-    this->set_start_column(CONFIG_START_COLUMN_DEFAULT);
-    this->set_row_size(CONFIG_ROW_SIZE_DEFAULT);
-    this->set_column_size(CONFIG_COLUMN_SIZE_DEFAULT);
+    this->set_row_start(CONFIG_START_ROW_DEFAULT);
+    this->set_column_start(CONFIG_START_COLUMN_DEFAULT);
+    this->set_row_end(CONFIG_ROW_SIZE_DEFAULT);
+    this->set_column_end(CONFIG_COLUMN_SIZE_DEFAULT);
     this->set_row_mode(CONFIG_ROW_MODE_DEFAULT);
     this->set_column_mode(CONFIG_COLUMN_MODE_DEFAULT);
     this->set_exposure(CONFIG_EXPOSURE_DEFAULT);
@@ -208,17 +208,17 @@ void avalon_camera::capture_start() {
     //so image capture knows physical addresses of buff0 and buff1
     void* buff0_p = this->buff_p;
     void* buff1_p = (void*)((uint8_t*)this->buff_p + sizeof(cpixel)*this->img_width*LINES_PER_BUFF);
-    IOWR32(this->address, CAMERA_BUFF0, buff0_p);
-    IOWR32(this->address, CAMERA_BUFF1, buff1_p);
+    IOWR32(this->address, reg::capture::buff0, buff0_p);
+    IOWR32(this->address, reg::capture::buff1, buff1_p);
 
     //Indicate the image size to the capture_image component
-    IOWR32(this->address, CAMERA_CAPTURE_WIDTH, this->img_width*LINES_PER_BUFF);
-    IOWR32(this->address, CAMERA_CAPTURE_HEIGHT, this->img_height/LINES_PER_BUFF);
+    IOWR32(this->address, reg::capture::width, this->img_width*LINES_PER_BUFF);
+    IOWR32(this->address, reg::capture::height, this->img_height/LINES_PER_BUFF);
 
     //Wait until Standby signal is 1. Its the way to ensure that the component
     //is not in reset or acquiring a signal.
     int counter = 10000000;
-    while((!(IORD32(this->address, CAMERA_CAPTURE_STANDBY)))&&(counter>0)) {
+    while((!(IORD32(this->address, reg::capture::standby)))&&(counter>0)) {
             //ugly way avoid software to get stuck
             counter--;
     }
@@ -230,12 +230,12 @@ void avalon_camera::capture_start() {
     //Reset the registers saving rising edges of buff0full and buff1full
     //in avalon camera, just in case the previous capture finished in
     //wrong way.
-    IOWR32(this->address, CAMERA_BUFF0_FULL, 0);
-    IOWR32(this->address, CAMERA_BUFF1_FULL, 0);
+    IOWR32(this->address, reg::capture::buff0_full, 0);
+    IOWR32(this->address, reg::capture::buff1_full, 0);
 
     //Start the capture (generate a pos flank in start_capture signal)
-    IOWR32(this->address, CAMERA_START_CAPTURE, 1);
-    IOWR32(this->address, CAMERA_START_CAPTURE, 0);
+    IOWR32(this->address, reg::capture::start, 1);
+    IOWR32(this->address, reg::capture::start, 0);
 
     return;
 }
@@ -262,12 +262,12 @@ void avalon_camera::capture_get_line(cpixel*& line) {
     //if the camera is now saving in the buff0 (odd lines)
     if (this->current_buff_v == this->buff0_v) {
         //check if buff0 is full without waiting
-        if ((IORD32(this->address, CAMERA_BUFF0_FULL)) == 1) {
+        if ((IORD32(this->address, reg::capture::buff0_full)) == 1) {
             // return CAMERA_CAPTURE_GET_LINE_BUFFER_FULL_NO_WAIT;
             throw exception::capture_buffer_full();
         } else {
             //wait for the line to be acquired
-            while((!IORD32(this->address, CAMERA_BUFF0_FULL))&&(counter>0)) {
+            while((!IORD32(this->address, reg::capture::buff0_full))&&(counter>0)) {
                 //ugly way avoid software to get stuck
                 counter--;
             }
@@ -275,19 +275,19 @@ void avalon_camera::capture_get_line(cpixel*& line) {
                 // return CAMERA_CAPTURE_GET_LINE_TIMEOUT;
                 throw exception::capture_timeout();
             }
-            IOWR32(this->address, CAMERA_BUFF0_FULL, 0); //reset the flag
+            IOWR32(this->address, reg::capture::buff0_full, 0); //reset the flag
             this->current_buff_v = this->buff1_v; //change the acquisition buffer
             line = this->buff0_v; //return address of the current acquired line
             return;
         }
     } else { //if the camera is now saving in the buff1 (even lines)
         //check if buff1 is full without waiting
-        if ((IORD32(this->address, CAMERA_BUFF1_FULL)) == 1) {
+        if ((IORD32(this->address, reg::capture::buff1_full)) == 1) {
             // return CAMERA_CAPTURE_GET_LINE_BUFFER_FULL_NO_WAIT;
             throw exception::capture_buffer_full();
         } else {
             //wait for the line to be acquired
-            while((!IORD32(this->address, CAMERA_BUFF1_FULL))&&(counter>0)) {
+            while((!IORD32(this->address, reg::capture::buff1_full))&&(counter>0)) {
                 //ugly way avoid software to get stuck
                 counter--;
             }
@@ -295,7 +295,7 @@ void avalon_camera::capture_get_line(cpixel*& line) {
                 // return CAMERA_CAPTURE_GET_LINE_TIMEOUT;
                 throw exception::capture_timeout();
             }
-            IOWR32(this->address, CAMERA_BUFF1_FULL, 0); //reset the flag
+            IOWR32(this->address, reg::capture::buff1_full, 0); //reset the flag
             this->current_buff_v = this->buff0_v; //change the acquisition buffer
             line = this->buff1_v; //return address of the current acquired line
             return;
@@ -306,7 +306,7 @@ void avalon_camera::capture_get_line(cpixel*& line) {
 //reset
 int avalon_camera::reset() {
     //soft_reset is active low so when 0 the camera is reset
-    IOWR32(this->address, CAMERA_SOFT_RESET, 0); //reset
-    IOWR32(this->address, CAMERA_SOFT_RESET, 1); //remove reset
+    IOWR32(this->address, reg::reset::soft, 0); //reset
+    IOWR32(this->address, reg::reset::soft, 1); //remove reset
     return 0; //return 0 on success
 }
