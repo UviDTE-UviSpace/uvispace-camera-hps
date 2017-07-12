@@ -18,17 +18,13 @@
 #define HPS_FPGA_BRIDGE_BASE 0xC0000000
 #define PIXEL_SIZE sizeof(u8) * 4
 #define IMAGE_MEM (PIXEL_SIZE * IMAGE_HEIGHT * IMAGE_WIDTH)
-#define LINES_PER_BUFF IMAGE_HEIGHT
 
 // Registers to control image_capture component
 #define CAMERA_START_CAPTURE           0x00
-#define CAMERA_CAPTURE_WIDTH           0x04
-#define CAMERA_CAPTURE_HEIGHT          0x08
-#define CAMERA_BUFF0                   0x0c
-#define CAMERA_BUFF1                   0x10
-#define CAMERA_BUFF0_FULL              0x14
-#define CAMERA_BUFF1_FULL              0x18
-#define CAMERA_CAPTURE_STANDBY         0x1c
+#define CAMERA_CAPTURE_IMGSIZE         0x04
+#define CAMERA_BUFF                    0x08
+#define CAMERA_IMGCAPTURED             0x0c
+#define CAMERA_CAPTURE_STANDBY         0x10
 // Registers to control camera_config component
 #define ADDR_WIDTH                     0x24
 #define ADDR_HEIGHT                    0x28
@@ -140,11 +136,11 @@ int camera_capture_image(char* user_read_buffer) {
     int counter;
     int error_count;
     // Save physical addresses into the avalon_camera
-    iowrite32(address_physical_buffer, address_virtual_camera + CAMERA_BUFF0);
+    iowrite32(address_physical_buffer, address_virtual_camera + CAMERA_BUFF);
 
     // Indicate the image size to the capture_image component
-    iowrite32(IMAGE_WIDTH * LINES_PER_BUFF, address_virtual_camera + CAMERA_CAPTURE_WIDTH);
-    iowrite32(IMAGE_HEIGHT / LINES_PER_BUFF, address_virtual_camera + CAMERA_CAPTURE_HEIGHT);
+    // TODO update image size
+    iowrite32(IMAGE_WIDTH * IMAGE_HEIGHT, address_virtual_camera + CAMERA_CAPTURE_IMGSIZE);
 
     // Wait until Standby signal is 1. Its the way to ensure that the component
     // is not in reset or acquiring a signal.
