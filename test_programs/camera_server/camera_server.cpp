@@ -1,13 +1,12 @@
 #include "camera_server.hpp"
 
-camera_server::camera_server::camera_server(int port) : abstract_server(port) {
-}
+camera_server::camera_server::camera_server(int port) : abstract_server(port) {}
 
 std::string camera_server::camera_server::process_request(std::string request) {
     if (request == "capture_frame") {
         return this->capture_frame();
     }
-    return "unknown command";
+    return abstract_server::process_request(request);
 }
 
 std::string camera_server::camera_server::capture_frame() {

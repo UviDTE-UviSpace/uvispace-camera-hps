@@ -13,13 +13,15 @@
 class abstract_server {
 public:
     abstract_server(int port);
-    int run();
-    int handle(int client);
+    void run();
+    void handle(int client);
     std::string get_request(int client);
-    int send_response(int client, std::string response);
+    void send_response(int client, std::string response);
 protected:
-    virtual std::string process_request(std::string request) = 0;
+    virtual std::string process_request(std::string request);
 private:
+    std::string disconnect_client();
     int port;
     int sock;
+    bool client_connected;
 };

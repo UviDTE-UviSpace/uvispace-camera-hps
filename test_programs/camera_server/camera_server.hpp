@@ -17,7 +17,7 @@ namespace camera_server {
     public:
         camera_server(int port);
     protected:
-        std::string process_request(std::string request);
+        std::string process_request(std::string request) override;
     private:
         std::string capture_frame();
     };
