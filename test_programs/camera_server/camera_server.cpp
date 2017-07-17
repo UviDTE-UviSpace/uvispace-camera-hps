@@ -11,18 +11,13 @@ std::string camera_server::camera_server::process_request(std::string request) {
 
 std::string camera_server::camera_server::capture_frame() {
     std::ifstream myfile;
-    char* buffer = new char[IMAGE_MEM];
     myfile.open("/dev/uvispace_camera", std::ios::binary);
     if (!myfile.is_open()) {
-        std::cout << "Can't open file\n";
-        return buffer;
+        std::cout << "File is closed\n";
+        return "";
     }
-    myfile.read(buffer, IMAGE_MEM);
+    std::string result(IMAGE_MEM, '\0');
+    myfile.read(&result[0], IMAGE_MEM);
     myfile.close();
-
-    std::string result = "";
-    for (uint32_t i = 0; i < IMAGE_WIDTH*IMAGE_HEIGHT*4; i += 1) {
-        result += buffer[i];
-    }
     return result;
 }
