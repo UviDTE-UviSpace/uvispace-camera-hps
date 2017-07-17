@@ -16,9 +16,11 @@ namespace camera_server {
     class camera_server: public abstract_server {
     public:
         camera_server(int port);
+        ~camera_server();
     protected:
         std::string process_request(std::string request) override;
     private:
         std::string capture_frame();
+        std::ifstream uvicamera;
     };
 }
