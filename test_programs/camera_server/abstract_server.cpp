@@ -65,27 +65,26 @@ void abstract_server::handle(int client) {
 }
 
 std::string abstract_server::get_request(int client) {
-    char* rx = new char[256];
-    std::string request = "";
-    // Read until we get a newline
-    while (request.find("\n") == std::string::npos) {
-        int nread = recv(client, rx, 257, 0);
-        if (nread < 0) {
-            if (errno == EINTR) {
-                // The socket call was interrupted -- try again
-                continue;
-            } else {
-                // An error occurred, so break out
-                std::cerr << "recv error\n";
-                return "";
-            }
+    char* rx = new char[32];
+    int nread = recv(client, rx, 32, 0);
+    if (nread < 0) {
+        if (errno == EINTR) {
+            // The socket call was interrupted -- try again
+        } else {
+            // An error occurred, so break out
+            std::cerr << "recv error\n";
+            return "";
         }
-        // Be sure to use append in case we have binary data
-        request.append(rx, nread);
     }
+
+    // Be sure to use append in case we have binary data
+    std::string request = "";
+    request.append(rx, nread);
+
     // Remove line breaks
     request.erase(std::remove(request.begin(), request.end(), '\n'), request.end());
     request.erase(std::remove(request.begin(), request.end(), '\r'), request.end());
+    delete[] rx;
     return request;
 }
 
@@ -102,28 +101,18 @@ std::string abstract_server::disconnect_client() {
 }
 
 void abstract_server::send_response(int client, std::string response) {
-    // prepare to send response
-    const char* ptr = response.c_str();
-    int nleft = response.length();
-    int nwritten;
-    // loop to be sure it is all sent
-    while (nleft) {
-        nwritten = send(client, ptr, nleft, MSG_NOSIGNAL);
-        if (nwritten < 0) {
-            if (errno == EINTR) {
-                // the socket call was interrupted -- try again
-                continue;
-            } else {
-                // an error occurred, so break out
-                std::cerr << "send error\n";
-                return;
-            }
-        } else if (nwritten == 0) {
-            // the socket is closed
+    int nwritten = send(client, response.c_str(), response.length(), MSG_NOSIGNAL);
+    if (nwritten < 0) {
+        if (errno == EINTR) {
+            // the socket call was interrupted
+        } else {
+            // an error occurred, so break out
+            std::cerr << "send error\n";
             return;
         }
-        nleft -= nwritten;
-        ptr += nwritten;
+    } else if (nwritten == 0) {
+        // the socket is closed
+        return;
     }
     return;
 }
