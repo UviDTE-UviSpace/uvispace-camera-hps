@@ -1,50 +1,43 @@
 #include "abstract_server.hpp"
 
-abstract_server::abstract_server(int port) : port(port) {}
-
-void abstract_server::run() {
+abstract_server::abstract_server(int port) : port(port) {
+    // Setup socket address structure
     struct sockaddr_in server_addr;
-
-    // setup socket address structure
-    memset(&server_addr,0,sizeof(server_addr));
+    std::memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(this->port);
     server_addr.sin_addr.s_addr = INADDR_ANY;
 
-    // create socket
-    this->sock = socket(PF_INET,SOCK_STREAM,0);
+    // Create socket
+    this->sock = socket(PF_INET, SOCK_STREAM, 0);
     if (!this->sock) {
-        perror("socket");
-        exit(-1);
+        throw server_init_error("Socket creation failed");
     }
 
-    // set socket to immediately reuse port when the application closes
+    // Set socket to immediately reuse port when the application closes
     int reuse = 1;
     if (setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
-        perror("setsockopt");
-        exit(-1);
+        throw server_init_error("Socket configuration failed");
     }
 
-    // call bind to associate the socket with our local address and port
-    if (bind(this->sock,(const struct sockaddr *)&server_addr,sizeof(server_addr)) < 0) {
-        perror("bind");
-        exit(-1);
+    // Call bind to associate the socket with our local address and port
+    if (bind(this->sock, (const struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
+        throw server_init_error("Socket binding failed");
     }
 
-    // convert the socket to listen for incoming connections
-    if (listen(this->sock,SOMAXCONN) < 0) {
-        perror("listen");
-        exit(-1);
+    // Convert the socket to listen for incoming connections
+    if (listen(this->sock, SOMAXCONN) < 0) {
+        throw server_init_error("Socket listening failed");
     }
+}
 
-    // setup client
+void abstract_server::run() {
     int client;
     struct sockaddr_in client_addr;
     socklen_t clientlen = sizeof(client_addr);
 
-    // accept clients
     while (true) {
-        client = accept(this->sock,(struct sockaddr *) &client_addr, &clientlen);
+        client = accept(this->sock, (struct sockaddr *) &client_addr, &clientlen);
         if (client > 0) {
             this->client_connected = true;
             handle(client);
@@ -55,10 +48,14 @@ void abstract_server::run() {
 }
 
 void abstract_server::handle(int client) {
-    while (this->client_connected) {
-        std::string request = this->get_request(client);
-        std::string response = this->process_request(request);
-        this->send_response(client, response);
+    try {
+        while (this->client_connected) {
+            std::string request = this->get_request(client);
+            std::string response = this->process_request(request);
+            this->send_response(client, response);
+        }
+    } catch (server_handling_error& e) {
+        this->disconnect_client();
     }
     close(client);
     return;
@@ -66,15 +63,9 @@ void abstract_server::handle(int client) {
 
 std::string abstract_server::get_request(int client) {
     char* rx = new char[32];
-    int nread = recv(client, rx, 32, 0);
+    ssize_t nread = recv(client, rx, 32, 0);
     if (nread < 0) {
-        if (errno == EINTR) {
-            // The socket call was interrupted -- try again
-        } else {
-            // An error occurred, so break out
-            std::cerr << "recv error\n";
-            return "";
-        }
+        throw server_handling_error("Error reading request");
     }
 
     // Be sure to use append in case we have binary data
@@ -101,18 +92,9 @@ std::string abstract_server::disconnect_client() {
 }
 
 void abstract_server::send_response(int client, std::string response) {
-    int nwritten = send(client, response.c_str(), response.length(), MSG_NOSIGNAL);
+    ssize_t nwritten = send(client, response.c_str(), response.length(), MSG_NOSIGNAL);
     if (nwritten < 0) {
-        if (errno == EINTR) {
-            // the socket call was interrupted
-        } else {
-            // an error occurred, so break out
-            std::cerr << "send error\n";
-            return;
-        }
-    } else if (nwritten == 0) {
-        // the socket is closed
-        return;
+        throw server_handling_error("Error sending request");
     }
     return;
 }

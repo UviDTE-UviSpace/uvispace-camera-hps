@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string.h>
+#include <cstring>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -24,4 +24,19 @@ private:
     int port;
     int sock;
     bool client_connected;
+};
+
+class server_error : public std::runtime_error {
+public:
+    server_error(const std::string what) : std::runtime_error(what) {}
+};
+
+class server_init_error : public server_error {
+public:
+    server_init_error(const std::string what) : server_error(what) {}
+};
+
+class server_handling_error : public server_error {
+public:
+    server_handling_error(const std::string what) : server_error(what) {}
 };
