@@ -2,8 +2,7 @@ camera_driver
 =============
 
 Character device driver for the uvispace_camera. It creates a readable device
-to allow frame capture by user space applications. The camera is operated
-according the memory registers defined in include/camera.h (ADD REFERENCE TO FILE).
+to allow frame capture by user space applications.
 
 Compilation and installation
 ----------------------------
