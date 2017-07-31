@@ -1,18 +1,15 @@
-TARGET=camera_server
-FLAGS=-std=c++11 -Wall
+TARGET = camera_server
+OBJS = main.o camera_server.o abstract_server.o
+FLAGS = -std=c++11 -Wall
 
-camera_server: main.o camera_server.o abstract_server.o
-	$(CXX) $(FLAGS) -o camera_server main.o camera_server.o abstract_server.o
+build: $(TARGET)
 
-main.o: main.cpp camera_server.hpp
-	$(CXX) $(FLAGS) -c main.cpp
+$(TARGET): $(OBJS)
+	$(CXX) $(FLAGS) -o $@ $^
 
-camera_server.o: camera_server.hpp camera_server.cpp
-	$(CXX) $(FLAGS) -c camera_server.cpp
-
-abstract_server.o: abstract_server.hpp abstract_server.cpp
-	$(CXX) $(FLAGS) -c abstract_server.cpp
+%.o: %.cpp %.hpp
+	$(CXX) $(FLAGS) -o $@ -c $<
 
 .PHONY: clean
 clean:
-	rm camera_server *.o
+	-rm $(TARGET) $(OBJS)

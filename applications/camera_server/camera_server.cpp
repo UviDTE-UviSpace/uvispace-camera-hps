@@ -4,7 +4,7 @@ camera_server::camera_server::camera_server(int port) : abstract_server(port) {
     // Open camera device
     this->uvicamera.open("/dev/uvispace_camera", std::ios::binary);
     if (!this->uvicamera.is_open()) {
-        throw server_init_error("uvispace_camera could not be open");
+        throw server_error::server_init_error("uvispace_camera could not be open");
     }
 }
 

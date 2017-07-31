@@ -1,4 +1,4 @@
-#include "camera_server.hpp"
+#include "main.hpp"
 
 int main() {
     camera_server::camera_server cs(36000);
