@@ -15,6 +15,6 @@
 #define ADDR_COLUMN_MODE               0x1C
 #define ADDR_EXPOSURE                  0x20
 // soft_reset signal
-#define CAMERA_SOFT_RESET              0x7c
+#define CAMERA_SOFT_RESET              0x7C
 
 #endif //__AVALON_CAMERA_REGS_H

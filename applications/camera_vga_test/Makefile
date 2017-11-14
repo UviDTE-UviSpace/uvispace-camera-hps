@@ -1,6 +1,6 @@
 TARGET = camera_vga_test
 OBJS = main.o
-INC = -I../include/
+INC = -I../../inc
 FLAGS = -std=c++11 -Wall
 
 build: $(TARGET)
