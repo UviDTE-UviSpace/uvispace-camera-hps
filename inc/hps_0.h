@@ -64,5 +64,16 @@
 #define AVALON_IMG_WRITER_BINARY_SPAN 64
 #define AVALON_IMG_WRITER_BINARY_END 0x33f
 
+/*
+ * Macros for device 'avalon_image_processing_0', class 'avalon_image_processing'
+ * The macros are prefixed with 'AVALON_IMAGE_PROCESSING_0_'.
+ * The prefix is the slave descriptor.
+ */
+#define AVALON_IMAGE_PROCESSING_0_COMPONENT_TYPE avalon_image_processing
+#define AVALON_IMAGE_PROCESSING_0_COMPONENT_NAME avalon_image_processing_0
+#define AVALON_IMAGE_PROCESSING_0_BASE 0x400
+#define AVALON_IMAGE_PROCESSING_0_SPAN 512
+#define AVALON_IMAGE_PROCESSING_0_END 0x5ff
+
 
 #endif /* _ALTERA_HPS_0_H_ */
