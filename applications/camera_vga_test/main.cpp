@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
         printf("HELP MESSAGE\n");
         printf("No arguments sets the default configuration\n");
         printf("Call with arguments to change the behaviour of the camera\n");
-        printf("FORMAT: camera_test width height start_row start_col row_size col_size row_mode col_mode exposure\n");
+        printf("FORMAT: camera_vga_test width height start_row start_col row_size col_size row_mode col_mode exposure\n");
         printf("EXAMPLE: ./camera_test 640 480 0 0 1919 2559 17 17 1984\n");
     }
     else {

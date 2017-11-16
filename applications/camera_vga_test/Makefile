@@ -3,13 +3,17 @@ OBJS = main.o
 INC = -I../../inc
 FLAGS = -std=c++11 -Wall
 
+CROSS_COMPILE := arm-linux-gnueabihf-
+CC = $(CROSS_COMPILE)gcc
+ARCH= arm
+
 build: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(FLAGS) $(INC) -o $@ $^
+	$(CC) $(FLAGS) $(INC) -o $@ $^
 
 %.o: %.cpp %.hpp
-	$(CXX) $(FLAGS) $(INC) -o $@ -c $<
+	$(CC) $(FLAGS) $(INC) -o $@ -c $<
 
 .PHONY: clean
 clean:
