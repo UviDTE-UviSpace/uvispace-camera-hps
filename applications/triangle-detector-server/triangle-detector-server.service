@@ -1,0 +1,10 @@
+[Unit]
+Description=Triangle Detector Server
+
+[Service]
+Type=simple
+WorkingDirectory=/home/root/triangle-detector-server
+ExecStart=/home/root/.virtualenvs/uvicamera/bin/python triangle-detector-server.py
+
+[Install]
+WantedBy=multi-user.target
