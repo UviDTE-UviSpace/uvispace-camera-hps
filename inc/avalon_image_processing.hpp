@@ -15,13 +15,15 @@
 /*
   Default values of some config registers
 */
-#define HUE_THRESHOLD_L_DEFAULT 220
-#define HUE_THRESHOLD_H_DEFAULT 30
-#define BRI_THRESHOLD_L_DEFAULT 60
-#define SAT_THRESHOLD_L_DEFAULT 60
+#define HUE_THRESHOLD_L_DEFAULT 230
+#define HUE_THRESHOLD_H_DEFAULT 20
+#define BRI_THRESHOLD_L_DEFAULT 45
+#define BRI_THRESHOLD_H_DEFAULT 255
+#define SAT_THRESHOLD_L_DEFAULT 20
+#define SAT_THRESHOLD_H_DEFAULT 255
 
 /*
-  Class definition for easy control of the camera
+  Class definition for easy control of the image processing
 */
 class ImageProcessing {
   private: // accesible only inside the class
@@ -35,18 +37,22 @@ class ImageProcessing {
     ImageProcessing(void* virtual_address);
 
     // Methods to set the thresholds for hsv 2 binary conversion
-    int set_hue_ths_L(uint8_t val);
+    int set_hue_th_L(uint8_t val);
     int set_hue_th_H(uint8_t val);
+    int set_brightness_th_L(uint8_t val);
     int set_brightness_th_H(uint8_t val);
+    int set_saturation_th_L(uint8_t val);
     int set_saturation_th_H(uint8_t val);
 
     // Method to set default parameters for image img_processing
     int set_default(void);
 
     // Methods to set the thresholds for hsv 2 binary conversion
-    uint8_t get_hue_ths_L(void);
+    uint8_t get_hue_th_L(void);
     uint8_t get_hue_th_H(void);
+    uint8_t get_brightness_th_L(void);
     uint8_t get_brightness_th_H(void);
+    uint8_t get_saturation_th_L(void);
     uint8_t get_saturation_th_H(void);
 };
 
@@ -59,7 +65,7 @@ ImageProcessing::ImageProcessing(void* virtual_address) {
 }
 
 // Methods to set the thresholds for hsv 2 binary conversion
-int ImageProcessing::set_hue_ths_L(uint8_t val){
+int ImageProcessing::set_hue_th_L(uint8_t val){
   IOWR32(this->address, ADDR_HUE_THRESHOLD_L, val);
   return 0;
 }
@@ -67,35 +73,51 @@ int ImageProcessing::set_hue_th_H(uint8_t val){
   IOWR32(this->address, ADDR_HUE_THRESHOLD_H, val);
   return 0;
 }
-int ImageProcessing::set_brightness_th_H(uint8_t val){
+int ImageProcessing::set_brightness_th_L(uint8_t val){
   IOWR32(this->address, ADDR_BRI_THRESHOLD_L, val);
   return 0;
 }
+int ImageProcessing::set_brightness_th_H(uint8_t val){
+  IOWR32(this->address, ADDR_BRI_THRESHOLD_H, val);
+  return 0;
+}
+int ImageProcessing::set_saturation_th_L(uint8_t val){
+  IOWR32(this->address, ADDR_SAT_THRESHOLD_L, val);
+  return 0;
+}
 int ImageProcessing::set_saturation_th_H(uint8_t val){
-  IOWR32(this->address, ADDR_SAT_COLUMN, val);
+  IOWR32(this->address, ADDR_SAT_THRESHOLD_H, val);
   return 0;
 }
 
 // Method to set default parameters for image img_processing
 int ImageProcessing::set_default(void) {
-  this->set_hue_ths_L(HUE_THRESHOLD_L_DEFAULT);
+  this->set_hue_th_L(HUE_THRESHOLD_L_DEFAULT);
   this->set_hue_th_H(HUE_THRESHOLD_H_DEFAULT);
-  this->set_brightness_th_H(BRI_THRESHOLD_L_DEFAULT);
-  this->set_saturation_th_H(SAT_THRESHOLD_L_DEFAULT);
+  this->set_brightness_th_L(BRI_THRESHOLD_L_DEFAULT);
+  this->set_brightness_th_H(BRI_THRESHOLD_H_DEFAULT);
+  this->set_saturation_th_L(SAT_THRESHOLD_L_DEFAULT);
+  this->set_saturation_th_H(SAT_THRESHOLD_H_DEFAULT);
   return 0;
 }
 
 // Methods to set the thresholds for hsv 2 binary conversion
-uint8_t ImageProcessing::get_hue_ths_L(void){
+uint8_t ImageProcessing::get_hue_th_L(void){
   return IORD32(this->address, ADDR_HUE_THRESHOLD_L);
 }
 uint8_t ImageProcessing::get_hue_th_H(void){
   return IORD32(this->address, ADDR_HUE_THRESHOLD_H);
 }
-uint8_t ImageProcessing::get_brightness_th_H(void){
+uint8_t ImageProcessing::get_brightness_th_L(void){
   return IORD32(this->address, ADDR_BRI_THRESHOLD_L);
 }
+uint8_t ImageProcessing::get_brightness_th_H(void){
+  return IORD32(this->address, ADDR_BRI_THRESHOLD_H);
+}
+uint8_t ImageProcessing::get_saturation_th_L(void){
+  return IORD32(this->address, ADDR_SAT_THRESHOLD_L);
+}
 uint8_t ImageProcessing::get_saturation_th_H(void){
-  return IORD32(this->address, ADDR_SAT_COLUMN);
+  return IORD32(this->address, ADDR_SAT_THRESHOLD_H);
 }
 #endif // __AVALON_CAMERA_H

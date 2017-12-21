@@ -1,10 +1,12 @@
 #include "main.hpp"
 
 void print_img_proc_config(ImageProcessing* img_proc) {
-    printf("hue threshold L changed to: %u\n", ((unsigned int) img_proc->get_hue_ths_L()));
-    printf("hue threshold H changed to: %u\n", ((unsigned int)  img_proc->get_hue_th_H()));
-    printf("brightness threshold L changed to: %u\n", ((unsigned int) img_proc->get_brightness_th_H()));
-    printf("saturation threshold L to: %u\n", ((unsigned int) img_proc->get_saturation_th_H()));
+    printf("hue threshold Low: %u\n", ((unsigned int) img_proc->get_hue_th_L()));
+    printf("hue threshold High: %u\n", ((unsigned int)  img_proc->get_hue_th_H()));
+    printf("brightness threshold Low: %u\n", ((unsigned int) img_proc->get_brightness_th_L()));
+    printf("brightness threshold High: %u\n", ((unsigned int) img_proc->get_brightness_th_H()));
+    printf("saturation threshold Low: %u\n", ((unsigned int) img_proc->get_saturation_th_L()));
+    printf("saturation threshold High: %u\n", ((unsigned int) img_proc->get_saturation_th_H()));
 }
 
 int main(int argc, char **argv) {
@@ -33,11 +35,13 @@ int main(int argc, char **argv) {
     ImageProcessing img_proc(img_proc_virtual_address);
 
     //Write the col_size value written by the user in the avalon_camera registers
-    if ( argc == 5) {
-        img_proc.set_hue_ths_L(atoi(argv[1]));
+    if ( argc == 7) {
+        img_proc.set_hue_th_L(atoi(argv[1]));
         img_proc.set_hue_th_H(atoi(argv[2]));
-        img_proc.set_brightness_th_H(atoi(argv[3]));
-        img_proc.set_saturation_th_H(atoi(argv[4]));
+        img_proc.set_brightness_th_L(atoi(argv[3]));
+        img_proc.set_brightness_th_H(atoi(argv[4]));
+        img_proc.set_saturation_th_L(atoi(argv[5]));
+        img_proc.set_saturation_th_H(atoi(argv[6]));
         print_img_proc_config(&img_proc);
     }
     else if (argc == 2) {
@@ -45,10 +49,10 @@ int main(int argc, char **argv) {
         printf("HELP MESSAGE\n");
         printf("No arguments sets the default configuration\n");
         printf("Call with arguments to change the behaviour of the image processing\n");
-        printf("FORMAT: img_processing_test hue_threshold_L hue_threshold_H brightness_threshold_L saturation_threshold_L\n");
-        printf("EXAMPLE TO BINARIZE GREEN (120 degrees): ./img_processing_test 80 90 60 60\n");
-        printf("EXAMPLE TO BINARIZE BLUE (240 degrees):  ./img_processing_test 165 175 60 60\n");
-        printf("EXAMPLE TO BINARIZE RED (0/360 degrees): ./img_processing_test 250 5 60 60\n");
+        printf("FORMAT: img_processing_test hue_threshold_L hue_threshold_H brightness_threshold_L brightness_threshold_H saturation_threshold_L saturation_threshold_H\n");
+        printf("EXAMPLE TO BINARIZE GREEN (120 degrees): ./img_processing_test 80 90 45 255 20 255\n");
+        printf("EXAMPLE TO BINARIZE BLUE (240 degrees):  ./img_processing_test 165 175 45 255 20 255\n");
+        printf("EXAMPLE TO BINARIZE RED (0/360 degrees): ./img_processing_test 250 5 45 255 20 255\n");
     }
     else {
         // Set default values.
