@@ -21,9 +21,15 @@
 #define CONFIG_START_COLUMN_DEFAULT 0
 #define CONFIG_ROW_SIZE_DEFAULT 1919
 #define CONFIG_COLUMN_SIZE_DEFAULT 2559
-#define CONFIG_ROW_MODE_DEFAULT 1
+#define CONFIG_ROW_MODE_DEFAULT 17
 #define CONFIG_COLUMN_MODE_DEFAULT 17
 #define CONFIG_EXPOSURE_DEFAULT 1023
+#define CONFIG_H_BLANKING_DEFAULT 0
+#define CONFIG_V_BLANKING_DEFAULT 25
+#define CONFIG_RED_GAIN_DEFAULT 156
+#define CONFIG_BLUE_GAIN_DEFAULT 154
+#define CONFIG_GREEN1_GAIN_DEFAULT 19
+#define CONFIG_GREEN2_GAIN_DEFAULT 19
 
 /*
   Class definition for easy control of the camera
@@ -53,6 +59,12 @@ class Camera {
     int config_set_row_mode(uint16_t val);
     int config_set_column_mode(uint16_t val);
     int config_set_exposure(uint16_t val);
+    int config_set_h_blanking(uint16_t val);
+    int config_set_v_blanking(uint16_t val);
+    int config_set_red_gain(uint16_t val);
+    int config_set_blue_gain(uint16_t val);
+    int config_set_green1_gain(uint16_t val);
+    int config_set_green2_gain(uint16_t val);
     int config_set_default(void);
     // config_update loads new configuration into the camera and resets
     // the video stream.
@@ -68,6 +80,12 @@ class Camera {
     uint16_t config_get_row_mode(void);
     uint16_t config_get_column_mode(void);
     uint16_t config_get_exposure(void);
+    uint16_t config_get_h_blanking(void);
+    uint16_t config_get_v_blanking(void);
+    uint16_t config_get_red_gain(void);
+    uint16_t config_get_blue_gain(void);
+    uint16_t config_get_green1_gain(void);
+    uint16_t config_get_green2_gain(void);
 
   private: // not accesible from ouside the class
     // resets and removes soft reset to reset the video stream
@@ -121,6 +139,30 @@ int Camera::config_set_exposure(uint16_t val) {
   IOWR32(this->address, ADDR_EXPOSURE, val);
   return 0;
 }
+int Camera::config_set_h_blanking(uint16_t val) {
+  IOWR32(this->address, ADDR_H_BLANKING, val);
+  return 0;
+}
+int Camera::config_set_v_blanking(uint16_t val) {
+  IOWR32(this->address, ADDR_V_BLANKING, val);
+  return 0;
+}
+int Camera::config_set_red_gain(uint16_t val) {
+  IOWR32(this->address, ADDR_RED_GAIN, val);
+  return 0;
+}
+int Camera::config_set_blue_gain(uint16_t val) {
+  IOWR32(this->address, ADDR_BLUE_GAIN, val);
+  return 0;
+}
+int Camera::config_set_green1_gain(uint16_t val) {
+  IOWR32(this->address, ADDR_GREEN1_GAIN, val);
+  return 0;
+}
+int Camera::config_set_green2_gain(uint16_t val) {
+  IOWR32(this->address, ADDR_GREEN2_GAIN, val);
+  return 0;
+}
 int Camera::config_set_default(void) {
   this->config_set_width(CONFIG_WIDTH_DEFAULT);
   this->config_set_height(CONFIG_HEIGHT_DEFAULT);
@@ -131,6 +173,12 @@ int Camera::config_set_default(void) {
   this->config_set_row_mode(CONFIG_ROW_MODE_DEFAULT);
   this->config_set_column_mode(CONFIG_COLUMN_MODE_DEFAULT);
   this->config_set_exposure(CONFIG_EXPOSURE_DEFAULT);
+  this->config_set_h_blanking(CONFIG_H_BLANKING_DEFAULT);
+  this->config_set_v_blanking(CONFIG_V_BLANKING_DEFAULT);
+  this->config_set_red_gain(CONFIG_RED_GAIN_DEFAULT);
+  this->config_set_blue_gain(CONFIG_BLUE_GAIN_DEFAULT);
+  this->config_set_green1_gain(CONFIG_GREEN1_GAIN_DEFAULT);
+  this->config_set_green2_gain(CONFIG_GREEN2_GAIN_DEFAULT);
   return 0;
 }
 int Camera::config_update(void) {
@@ -167,6 +215,24 @@ uint16_t Camera::config_get_column_mode(void) {
 }
 uint16_t Camera::config_get_exposure(void) {
   return IORD32(this->address, ADDR_EXPOSURE);
+}
+uint16_t Camera::config_get_h_blanking(void) {
+  return IORD32(this->address, ADDR_H_BLANKING);
+}
+uint16_t Camera::config_get_v_blanking(void) {
+  return IORD32(this->address, ADDR_V_BLANKING);
+}
+uint16_t Camera::config_get_red_gain(void) {
+  return IORD32(this->address, ADDR_RED_GAIN);
+}
+uint16_t Camera::config_get_blue_gain(void) {
+  return IORD32(this->address, ADDR_BLUE_GAIN);
+}
+uint16_t Camera::config_get_green1_gain(void) {
+  return IORD32(this->address, ADDR_GREEN1_GAIN);
+}
+uint16_t Camera::config_get_green2_gain(void) {
+  return IORD32(this->address, ADDR_GREEN2_GAIN);
 }
 
 // reset
