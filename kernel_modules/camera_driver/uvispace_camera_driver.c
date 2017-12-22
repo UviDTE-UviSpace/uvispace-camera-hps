@@ -22,6 +22,10 @@
 #define GREY   1
 #define BINARY 2
 
+// Image writer mode
+#define SINGLE_SHOT 0
+#define CONTINUOUS  1
+
 // Default dimensions
 #define DEFAULT_IMAGE_HEIGHT 480
 #define DEFAULT_IMAGE_WIDTH  640
@@ -43,18 +47,22 @@ static struct device* device = NULL;
 // Camera variables
 static void* address_virtual_camera;
 
-static void* address_virtual_buffer;
-static dma_addr_t address_physical_buffer;
+static void* address_virtual_buffer0;
+static dma_addr_t address_physical_buffer0;
+static void* address_virtual_buffer1;
+static dma_addr_t address_physical_buffer1;
 static size_t image_memory_size;
 
 // Function prototypes
 static int camera_open(struct inode *, struct file *);
+static loff_t camera_lseek(struct file *file, loff_t offset, int orig);
 static int camera_release(struct inode *, struct file *);
 static ssize_t camera_read(struct file *, char *, size_t, loff_t *);
 int camera_capture_image(char* user_read_buffer);
 
 static struct file_operations fops = {
     .open = camera_open,
+    .llseek = camera_lseek,
     .read = camera_read,
     .release = camera_release,
 };
@@ -63,6 +71,7 @@ static struct file_operations fops = {
 static int image_type = RGBG;
 static int image_height = DEFAULT_IMAGE_HEIGHT;
 static int image_width = DEFAULT_IMAGE_WIDTH;
+static int image_writer_mode = CONTINUOUS;
 
 static ssize_t image_type_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
@@ -95,14 +104,27 @@ static ssize_t image_width_store(struct kobject *kobj, struct kobj_attribute *at
   return count;
 }
 
+static ssize_t image_writer_mode_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+  return sprintf(buf, "%d\n", image_writer_mode);
+}
+
+static ssize_t image_writer_mode_store(struct kobject *kobj, struct kobj_attribute *attr, const char *buf, size_t count)
+{
+  sscanf(buf, "%du", &image_writer_mode);
+  return count;
+}
+
 static struct kobj_attribute image_type_attribute = __ATTR(image_type, 0660, image_type_show, image_type_store);
 static struct kobj_attribute image_height_attribute = __ATTR(image_height, 0660, image_height_show, image_height_store);
 static struct kobj_attribute image_width_attribute = __ATTR(image_width, 0660, image_width_show, image_width_store);
+static struct kobj_attribute image_writer_mode_attribute = __ATTR(image_writer_mode, 0660, image_writer_mode_show, image_writer_mode_store);
 
 static struct attribute *uvispace_camera_attributes[] = {
       &image_type_attribute.attr,
       &image_height_attribute.attr,
       &image_width_attribute.attr,
+      &image_writer_mode_attribute.attr,
       NULL,
 };
 
@@ -113,6 +135,8 @@ static struct attribute_group attribute_group = {
 
 static struct kobject *uvispace_camera_kobj;
 
+
+//------INIT AND EXIT FUNCTIONS-----//
 static int __init camera_driver_init(void) {
     int result;
 
@@ -143,7 +167,7 @@ static int __init camera_driver_init(void) {
     uvispace_camera_kobj = kobject_create_and_add("uvispace_camera", kernel_kobj->parent);
     if (!uvispace_camera_kobj) {
        printk(KERN_INFO DEVICE_NAME": Failed to create kobject mapping\n");
-       return 1;
+       return -1;
     }
     // add the attributes to /sys/uvispace_camera/attributes
     result = sysfs_create_group(uvispace_camera_kobj, &attribute_group);
@@ -160,10 +184,115 @@ static void __exit camera_driver_exit(void) {
     class_unregister(class);
     class_destroy(class);
     unregister_chrdev(majorNumber, DEVICE_NAME);
+    kobject_put(uvispace_camera_kobj);
     printk(KERN_INFO DEVICE_NAME": Exit\n");
 }
 
+//-----SMALL API TO CONTROL THE CAMERA-----//
+int camera_setup(void){
+    // Save the mode (SINGLE_SHOT or CONTINUOUS)
+    iowrite32(image_writer_mode, address_virtual_camera + CAPTURE_MODE);
+
+    // Indicate the image size to the capture_image component
+    iowrite32(image_width, address_virtual_camera + CAPTURE_WIDTH);
+    iowrite32(image_height, address_virtual_camera + CAPTURE_HEIGHT);
+
+    // Save physical addresses into the avalon_camera
+    iowrite32(address_physical_buffer0, address_virtual_camera + CAPTURE_BUFF0);
+    iowrite32(address_physical_buffer1, address_virtual_camera + CAPTURE_BUFF1);
+
+    // Choose buffer 0 to be used in SINGLE_SHOT
+    iowrite32(0, address_virtual_camera + CAPTURE_BUFFER_SELECT);
+
+    // Choose to use 2 alternating buffers in CONTINUOUS mode
+    iowrite32(1, address_virtual_camera + CONT_DOUBLE_BUFF);
+
+    // Set up downsampling as 1 to get the whole image
+    iowrite32(1, address_virtual_camera + CAPTURE_DOWNSAMPLING);
+
+    return 0;
+}
+
+int camera_start_capture(void) {
+    int counter;
+
+    // Wait until Standby signal is 1. Its the way to ensure that the component
+    // is not in reset or acquiring a signal.
+    counter = 10000000;
+    while((!(ioread32(address_virtual_camera + CAPTURE_STANDBY))) && (counter>0)) {
+        // Ugly way avoid software to get stuck
+        counter--;
+    }
+    if (counter == 0) {
+        printk(KERN_INFO DEVICE_NAME": Camera no reply\n");
+        return ERROR_CAMERA_NO_REPLY;
+    }
+
+    // Start the capture
+    iowrite32(1, address_virtual_camera + START_CAPTURE);
+
+    return 0;
+}
+
+// Stop the capture
+int camera_stop_capture(void) {
+    // Start the capture
+    iowrite32(0, address_virtual_camera + START_CAPTURE);
+    return 0;
+}
+
+
+int camera_get_image(char* user_read_buffer) {
+    int error;
+    //int i;
+    int last_buffer;
+    void* address_virtual_buffer;
+
+    if (image_writer_mode == SINGLE_SHOT)
+    {
+        //Start capture
+        error = camera_start_capture();
+        if (error != 0) {
+            printk(KERN_INFO DEVICE_NAME": Start capture failure\n");
+            return error;
+        }
+
+        // Wait for the image to be acquired
+        while (!ioread32(address_virtual_camera + CAPTURE_STANDBY)) {}
+
+        //In SINGLE_SHOT image is always saved in buffer 0
+        address_virtual_buffer = address_virtual_buffer0;
+
+        // for (i = 0; i < 20; i += 1)
+        // {
+        //   printk(KERN_INFO DEVICE_NAME": buff[%d] = %d", i, ((int*)address_virtual_buffer)[i]);
+        // }
+    }
+    else // (image_writer_mode == CONTINUOUS)
+    {
+        //Capture already started so just check where the last image was saved
+        last_buffer = ioread32(address_virtual_camera + LAST_BUFFER_CAPTURED);
+        if (last_buffer == 0)
+            address_virtual_buffer = address_virtual_buffer0;
+        else
+            address_virtual_buffer = address_virtual_buffer1;
+    }
+
+    // Copy the image from buffer camera buffer to user buffer
+    error = copy_to_user(user_read_buffer, address_virtual_buffer, image_memory_size);
+
+    if (error != 0) {
+        printk(KERN_INFO DEVICE_NAME": Failed to send %d characters to the user in read function\n", error);
+        return -EFAULT;  // Failed -- return a bad address message (i.e. -14)
+    }
+    return 0;
+}
+
+
+//-----CHAR DEVICE DRIVER SPECIFIC FUNCTIONS-----//
+
 static int camera_open(struct inode *inodep, struct file *filep) {
+    int error;
     int image_writer_base;
     int image_writer_span;
     int pixel_size;
@@ -199,80 +328,80 @@ static int camera_open(struct inode *inodep, struct file *filep) {
     // Calculate required memory to store an Image
     image_memory_size = image_width * image_height * pixel_size;
 
-    // Allocate uncached buffer
+    // Allocate uncached buffers
     // The dma_alloc_coherent() function allocates non-cached physically
     // contiguous memory. Accesses to the memory by the CPU are the same
     // as a cache miss when the cache is used. The CPU does not have to
     // invalidate or flush the cache which can be time consuming.
-    address_virtual_buffer = dma_alloc_coherent(
+    address_virtual_buffer0 = dma_alloc_coherent(
         NULL,
         image_memory_size,
-        &address_physical_buffer, //address to use from DMAC
+        &address_physical_buffer0, //address to use from image writer in fpga
         GFP_KERNEL);
 
-    if (address_virtual_buffer == NULL) {
-        printk(KERN_INFO DEVICE_NAME": Allocation of non-cached buffer failed\n");
+    if (address_virtual_buffer0 == NULL) {
+        printk(KERN_INFO DEVICE_NAME": Allocation of non-cached buffer 0 failed\n");
         return -1;
     }
 
-    return 0;
-}
+    address_virtual_buffer1 = dma_alloc_coherent(
+        NULL,
+        image_memory_size,
+        &address_physical_buffer1, //address to use from image writer in fpga
+        GFP_KERNEL);
 
-int camera_capture_image(char* user_read_buffer) {
-    int counter;
-    int error_count;
-    int i;
-    // Save physical addresses into the avalon_camera
-    iowrite32(address_physical_buffer, address_virtual_camera + CAPTURE_BUFF0);
-    iowrite32(address_physical_buffer, address_virtual_camera + CAPTURE_BUFF1);
-    iowrite32(0, address_virtual_camera + CAPTURE_BUFFER_SELECT);
-
-    // Indicate the image size to the capture_image component
-    // TODO update image size
-    iowrite32(image_width, address_virtual_camera + CAPTURE_WIDTH);
-    iowrite32(image_height, address_virtual_camera + CAPTURE_HEIGHT);
-
-    // Set up downsampling as 1 to get the whole image
-    iowrite32(1, address_virtual_camera + CAPTURE_DOWNSAMPLING);
-
-    // Wait until Standby signal is 1. Its the way to ensure that the component
-    // is not in reset or acquiring a signal.
-    counter = 10000000;
-    while((!(ioread32(address_virtual_camera + CAPTURE_STANDBY))) && (counter>0)) {
-        // Ugly way avoid software to get stuck
-        counter--;
-    }
-    if (counter == 0) {
-        printk(KERN_INFO DEVICE_NAME": Camera no reply\n");
-        return ERROR_CAMERA_NO_REPLY;
+    if (address_virtual_buffer1 == NULL) {
+        printk(KERN_INFO DEVICE_NAME": Allocation of non-cached buffer 1 failed\n");
+        return -1;
     }
 
-    // Start the capture (generate a pos flank in start_capture signal)
-    iowrite32(1, address_virtual_camera + START_CAPTURE);
-    iowrite32(0, address_virtual_camera + START_CAPTURE);
-
-    // Wait for the image to be acquired
-    while (!ioread32(address_virtual_camera + CAPTURE_STANDBY)) {}
-
-    for (i = 0; i < 20; i += 1)
-    {
-      printk(KERN_INFO DEVICE_NAME": buff[%d] = %d", i, ((int*)address_virtual_buffer)[i]);
+    //Write the setup to the camera
+    error = camera_setup();
+    if (error != 0) {
+        printk(KERN_INFO DEVICE_NAME": Setup failure\n");
+        return -1;
     }
 
-    // Copy the image from buffer camera buffer to user buffer
-    error_count = copy_to_user(user_read_buffer, address_virtual_buffer, image_memory_size);
-
-    if (error_count != 0) {
-        printk(KERN_INFO DEVICE_NAME": Failed to send %d characters to the user in read function\n", error_count);
-        return -EFAULT;  // Failed -- return a bad address message (i.e. -14)
+    //In continuous mode start the capture of images into buff0 and buff1
+    if(image_writer_mode == CONTINUOUS){
+      error = camera_start_capture();
+      if (error != 0) {
+          printk(KERN_INFO DEVICE_NAME": Start capture failure\n");
+          return -1;
+      }
     }
     return 0;
 }
+
+static loff_t camera_lseek(struct file *file, loff_t offset, int orig) {
+    loff_t new_pos = 0;
+    printk(KERN_INFO DEVICE_NAME": lseek\n");
+    switch (orig) {
+        case 0 : /*seek set*/
+            new_pos = offset;
+            break;
+        case 1 : /*seek cur*/
+            new_pos = file->f_pos + offset;
+            break;
+        case 2 : /*seek end*/
+            new_pos = image_memory_size - offset;
+            break;
+    }
+    if (new_pos > image_memory_size) {
+        new_pos = image_memory_size;
+    }
+    if (new_pos < 0) {
+        new_pos = 0;
+    }
+    file->f_pos = new_pos;
+    return new_pos;
+}
+
 
 static ssize_t camera_read(struct file *filep, char *buffer, size_t len, loff_t *offset) {
     int error;
     printk(KERN_INFO DEVICE_NAME": Read\n");
-    error = camera_capture_image(buffer);
+    error = camera_get_image(buffer);
     if (error != 0) {
         printk(KERN_INFO DEVICE_NAME": Read failure\n");
         return 0;
@@ -281,7 +410,9 @@ static ssize_t camera_read(struct file *filep, char *buffer, size_t len, loff_t 
 }
 
 static int camera_release(struct inode *inodep, struct file *filep) {
-    dma_free_coherent(NULL, image_memory_size, address_virtual_buffer, address_physical_buffer);
+    camera_stop_capture();
+    dma_free_coherent(NULL, image_memory_size, address_virtual_buffer0, address_physical_buffer0);
+    dma_free_coherent(NULL, image_memory_size, address_virtual_buffer1, address_physical_buffer1);
     iounmap(address_virtual_camera);
     printk(KERN_INFO DEVICE_NAME": Release\n");
     return 0;
