@@ -216,6 +216,9 @@ int camera_setup(void){
 int camera_start_capture(void) {
     int counter;
 
+    // Stop the capture
+    iowrite32(0, address_virtual_camera + START_CAPTURE);
+
     // Wait until Standby signal is 1. Its the way to ensure that the component
     // is not in reset or acquiring a signal.
     counter = 10000000;
@@ -236,7 +239,7 @@ int camera_start_capture(void) {
 
 // Stop the capture
 int camera_stop_capture(void) {
-    // Start the capture
+    // Stop the capture
     iowrite32(0, address_virtual_camera + START_CAPTURE);
     return 0;
 }

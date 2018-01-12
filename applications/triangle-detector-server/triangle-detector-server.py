@@ -14,21 +14,25 @@ def main():
     # Init fps counter
     mean_fps = 0
     # Bind publisher socket
-    publisher = zmq.Context.instance().socket(zmq.PUB)
-    publisher.bind("tcp://*:5005")
+    frame_publisher = zmq.Context.instance().socket(zmq.PUB)
+    triangle_publisher = zmq.Context.instance().socket(zmq.PUB)
+    frame_publisher.sndhwm = 1
+    triangle_publisher.sndhwm = 1
+    frame_publisher.bind("tcp://*:33000")#for image
+    triangle_publisher.bind("tcp://*:5005")#for triangles
+    f =  open("/dev/uvispace_camera", "rb");
     while True:
         t1 = datetime.datetime.now()
-        triangles = process_frame()
-        publisher.send_json(triangles)
+        frame = numpy.fromfile(f, numpy.uint8, 480 * 640).reshape((480, 640))
+        triangles = process_frame(frame)
+        triangle_publisher.send_json(triangles)
+        frame_publisher.send(frame)
         last_fps = 1000000 / (datetime.datetime.now() - t1).microseconds
         mean_fps = 0.9 * mean_fps + 0.1 * last_fps
-        # print(mean_fps)
+        print(mean_fps)
 
 
-def process_frame():
-    # Get binarized image
-    with open("/dev/uvispace_camera", "rb") as f:
-        frame = numpy.fromfile(f, numpy.uint8, 480 * 640).reshape((480, 640))
+def process_frame(frame):
     # Get shapes from image
     triangles = get_shapes(frame)
     return triangles
