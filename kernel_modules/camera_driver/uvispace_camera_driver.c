@@ -43,6 +43,13 @@
 // Camera errors
 #define ERROR_CAMERA_NO_REPLY 1
 
+ //SDRAMC beginning address
+#define SDRAMC_REGS 0xFFC20000
+//SDRAMC Span 128kB
+#define SDRAMC_REGS_SPAN 0x20000 //128kB
+//Offset of FPGA-to-SDRAMC ports reset register from the beginning of SDRAMC
+#define FPGAPORTRST 0x5080
+
 // Module information
 MODULE_AUTHOR("Department of Electronic Technology, University of Vigo");
 MODULE_DESCRIPTION("uvispace_camera: character device driver for uvispace camera");
@@ -57,7 +64,7 @@ static struct device* device_gray = NULL;
 static struct device* device_bin = NULL;
 
 // Image writer variables (one for each image_writer)
-// 0 is RGBG, 1 is Gray and 2 is Bin (same as minor numbers)
+// 0 is RGBGray, 1 is Gray and 2 is Bin (same as minor numbers)
 static void* address_virtual_image_writer[3];
 static int is_open[3];
 static void* address_virtual_buffer0[3];
@@ -65,6 +72,7 @@ static dma_addr_t address_physical_buffer0[3];
 static void* address_virtual_buffer1[3];
 static dma_addr_t address_physical_buffer1[3];
 static size_t image_memory_size[3];
+static int32_t last_image_number[3];
 
 // Function prototypes
 static int camera_open(struct inode *, struct file *);
@@ -138,6 +146,7 @@ static struct kobject *uvispace_camera_kobj;
 static int __init camera_driver_init(void) {
     int result;
     int i;
+    void* SDRAMC_virtual_address;
 
     printk(KERN_INFO DRIVER_NAME": Init\n");
     // Dynamically allocate a major number for the device
@@ -187,6 +196,15 @@ static int __init camera_driver_init(void) {
 
     // Reset the variables that flag if a device is already Open
     for (i=0; i<3; i++) is_open[i] = 0;
+
+    //Remove FPGA-to-SDRAMC ports from reset so FPGA can access SDRAM from them
+    SDRAMC_virtual_address = ioremap(SDRAMC_REGS, SDRAMC_REGS_SPAN);
+    if (SDRAMC_virtual_address == NULL)
+    {
+      printk(KERN_INFO "DMA LKM: error doing SDRAMC ioremap\n");
+      goto error_create_kobj;
+    }
+    *((unsigned int *)(SDRAMC_virtual_address + FPGAPORTRST)) = 0xFFFF;
 
     return 0;
 
@@ -295,6 +313,15 @@ int camera_get_image(int n, char* user_read_buffer) {
     }
     else // (image_writer_mode == CONTINUOUS)
     {
+        //In case the software applicattions ask for images faster than the hardware can provide
+        //block the execution here until a new image is available
+        while (ioread32(address_virtual_image_writer[n] + CAPTURE_IMAGE_COUNTER)
+        == last_image_number[n]){};
+
+        last_image_number[n] = ioread32(address_virtual_image_writer[n] + CAPTURE_IMAGE_COUNTER);
+
+        //printk(KERN_INFO DRIVER_NAME": Image number %d\n", (int) last_image_number[n]);
+
         //Capture already started so just check where the last image was saved
         last_buffer = ioread32(address_virtual_image_writer[n] + LAST_BUFFER_CAPTURED);
         if (last_buffer == 0)
@@ -315,7 +342,6 @@ int camera_get_image(int n, char* user_read_buffer) {
 
 
 //-----CHAR DEVICE DRIVER SPECIFIC FUNCTIONS-----//
-
 static int camera_open(struct inode *inodep, struct file *filep) {
     int error;
     int image_writer_base;
@@ -407,6 +433,7 @@ static int camera_open(struct inode *inodep, struct file *filep) {
     }
 
     is_open[dev_number] = 1;
+    last_image_number[dev_number] = 0;
 
     return 0;
 }
