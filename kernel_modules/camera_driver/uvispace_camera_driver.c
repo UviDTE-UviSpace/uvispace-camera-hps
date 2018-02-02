@@ -239,10 +239,6 @@ int camera_setup(int n){
     // Save the mode (SINGLE_SHOT or CONTINUOUS)
     iowrite32(image_writer_mode, address_virtual_image_writer[n] + CAPTURE_MODE);
 
-    // Indicate the image size to the capture_image component
-    iowrite32(image_width, address_virtual_image_writer[n] + CAPTURE_WIDTH);
-    iowrite32(image_height, address_virtual_image_writer[n] + CAPTURE_HEIGHT);
-
     // Save physical addresses into the avalon_camera
     iowrite32(address_physical_buffer0[n], address_virtual_image_writer[n] + CAPTURE_BUFF0);
     iowrite32(address_physical_buffer1[n], address_virtual_image_writer[n] + CAPTURE_BUFF1);
