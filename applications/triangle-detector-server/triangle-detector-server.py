@@ -25,8 +25,8 @@ def main():
     gray_frame_publisher.sndhwm = 1
     triangle_publisher.sndhwm = 1
     bin_frame_publisher.bind("tcp://*:33000")
-    gray_frame_publisher.bind("tcp://*:33001")
-    triangle_publisher.bind("tcp://*:5005")
+    gray_frame_publisher.bind("tcp://*:34000")
+    triangle_publisher.bind("tcp://*:32000")
     f_bin  =  open("/dev/uvispace_camera_bin",  "rb");
     f_gray =  open("/dev/uvispace_camera_gray", "rb");
     while True:
