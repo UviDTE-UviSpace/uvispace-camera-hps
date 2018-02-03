@@ -8,6 +8,9 @@ import _polygon
 # This server posts in 3 different zmq sockets the gray image, the binary image and the
 # triangles (position of cars) obtained from the binary image.
 
+IMG_WIDTH = 640;
+IMG_HEIGHT = 468;
+
 def main():
     # Init fps(frames per second) counter
     mean_fps = 0
@@ -28,11 +31,11 @@ def main():
     f_gray =  open("/dev/uvispace_camera_gray", "rb");
     while True:
         t1 = datetime.datetime.now()
-        bin_frame = numpy.fromfile(f_bin, numpy.uint8, 480 * 640).reshape((480, 640))
+        bin_frame = numpy.fromfile(f_bin, numpy.uint8, IMG_HEIGHT * IMG_WIDTH).reshape((IMG_HEIGHT, IMG_WIDTH))
         triangles = process_frame(bin_frame)
         triangle_publisher.send_json(triangles)
         bin_frame_publisher.send(bin_frame)
-        gray_frame = numpy.fromfile(f_gray, numpy.uint8, 480 * 640).reshape((480, 640))
+        gray_frame = numpy.fromfile(f_gray, numpy.uint8, IMG_HEIGHT * IMG_WIDTH).reshape((IMG_HEIGHT, IMG_WIDTH))
         gray_frame_publisher.send(gray_frame)
         last_fps = 1000000 / (datetime.datetime.now() - t1).microseconds
         mean_fps = 0.9 * mean_fps + 0.1 * last_fps

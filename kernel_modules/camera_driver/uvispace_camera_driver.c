@@ -287,7 +287,7 @@ int camera_stop_capture(int n) {
 }
 
 
-int camera_get_image(int n, char* user_read_buffer) {
+int camera_get_image(int n, char* user_read_buffer,  size_t len) {
     int error;
     int last_buffer;
     void* address_virtual_buffer;
@@ -327,7 +327,7 @@ int camera_get_image(int n, char* user_read_buffer) {
     }
 
     // Copy the image from buffer camera buffer to user buffer
-    error = copy_to_user(user_read_buffer, address_virtual_buffer, image_memory_size[n]);
+    error = copy_to_user(user_read_buffer, address_virtual_buffer, len);
 
     if (error != 0) {
         printk(KERN_INFO DRIVER_NAME": Failed to send %d characters to the user in read function\n", error);
@@ -445,7 +445,7 @@ static ssize_t camera_read(struct file *filep, char *buffer, size_t len, loff_t 
       return -1;
     }
 
-    error = camera_get_image(dev_number, buffer);
+    error = camera_get_image(dev_number, buffer, len);
     if (error != 0) {
         printk(KERN_INFO DRIVER_NAME": Read failure\n");
         return -1;
