@@ -4,7 +4,7 @@ INC = -I../../inc
 FLAGS = -std=c++11 -Wall
 
 CROSS_COMPILE := arm-linux-gnueabihf-
-CC = $(CROSS_COMPILE)gcc
+CC = $(CROSS_COMPILE)g++
 ARCH= arm
 
 build: $(TARGET)

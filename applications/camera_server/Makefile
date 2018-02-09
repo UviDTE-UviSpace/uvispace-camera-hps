@@ -1,14 +1,19 @@
 TARGET = camera_server
-OBJS = main.o camera_server.o abstract_server.o
+OBJS = abstract_server.o camera_server.o main.o
+INC = -I../../inc
 FLAGS = -std=c++11 -Wall
+
+CROSS_COMPILE := arm-linux-gnueabihf-
+CC = $(CROSS_COMPILE)g++
+ARCH= arm
 
 build: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(FLAGS) -o $@ $^
+	$(CC) $(FLAGS) $(INC) -o $@ $^
 
 %.o: %.cpp %.hpp
-	$(CXX) $(FLAGS) -o $@ -c $<
+	$(CC) $(FLAGS) $(INC) -o $@ -c $<
 
 .PHONY: clean
 clean:
