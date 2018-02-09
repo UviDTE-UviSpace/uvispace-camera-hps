@@ -1,5 +1,7 @@
 #include "main.hpp"
 
+#define PORT 36000
+
 int main(int argc, char** argv) {
     // Process command line arguments
     if (argc != 2) {
@@ -27,7 +29,7 @@ int main(int argc, char** argv) {
     }
 
     // Run server
-    camera_server::camera_server cs(36000, image_type);
+    camera_server::camera_server cs(PORT, image_type);
     cs.run();
     return 0;
 }

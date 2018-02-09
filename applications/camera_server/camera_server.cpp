@@ -1,16 +1,7 @@
 #include "camera_server.hpp"
 
 camera_server::camera_server::camera_server(int port, int image_type) : abstract_server(port) {
-    // Set up sysfs variables
-    std::ofstream image_type_configuration;
-    image_type_configuration.open("/sys/uvispace_camera/attributes/image_type");
-    if (!image_type_configuration.is_open()) {
-        throw server_error::server_init_error("could not set up uvispace_camera");
-    }
-    image_type_configuration << image_type;
-    image_type_configuration.close();
-
-    // Store pixel size
+    // Store pixel size in Bytes
     if (image_type == 0) {
       this->pixel_size = 4;
     } else if ((image_type == 1) || (image_type == 2)) {
@@ -18,7 +9,14 @@ camera_server::camera_server::camera_server(int port, int image_type) : abstract
     }
 
     // Open camera device
-    this->uvicamera.open("/dev/uvispace_camera", std::ios::binary);
+    if (image_type == 0){
+        this->uvicamera.open("/dev/uvispace_camera_rgbg", std::ios::binary);
+    } else if (image_type == 1) {
+        this->uvicamera.open("/dev/uvispace_camera_gray", std::ios::binary);
+    } else if (image_type == 2) {
+        this->uvicamera.open("/dev/uvispace_camera_bin", std::ios::binary);
+    }
+
     if (!this->uvicamera.is_open()) {
         throw server_error::server_init_error("uvispace_camera could not be open");
     }
