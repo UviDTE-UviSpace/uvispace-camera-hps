@@ -29,17 +29,22 @@ def main():
     triangle_publisher.bind("tcp://*:32000")
     f_bin  =  open("/dev/uvispace_camera_bin",  "rb");
     f_gray =  open("/dev/uvispace_camera_gray", "rb");
+    t1 = datetime.datetime.now()
     while True:
-        t1 = datetime.datetime.now()
+        #get last binary image from memory, calculate triangles and serve them
         bin_frame = numpy.fromfile(f_bin, numpy.uint8, IMG_HEIGHT * IMG_WIDTH).reshape((IMG_HEIGHT, IMG_WIDTH))
         triangles = process_frame(bin_frame)
         triangle_publisher.send_json(triangles)
+        #get gray image from memory and serve binary and gray images
         bin_frame_publisher.send(bin_frame)
         gray_frame = numpy.fromfile(f_gray, numpy.uint8, IMG_HEIGHT * IMG_WIDTH).reshape((IMG_HEIGHT, IMG_WIDTH))
         gray_frame_publisher.send(gray_frame)
-        last_fps = 1000000 / (datetime.datetime.now() - t1).microseconds
-        mean_fps = 0.9 * mean_fps + 0.1 * last_fps
-        print(mean_fps)
+        #calculate frame rate
+        t2 = datetime.datetime.now()
+        loop_time = (t2 - t1).microseconds
+        t1 = t2
+        last_fps = 1000000 / loop_time
+        print(last_fps)
 
 
 def process_frame(frame):
