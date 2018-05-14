@@ -2,17 +2,49 @@ import datetime
 
 import numpy
 import zmq
+import sys
 
 import _find_contours
 import _polygon
 # This server posts in 3 different zmq sockets the gray image, the binary image and the
 # triangles (position of cars) obtained from the binary image.
 
-IMG_WIDTH = 640;
-IMG_HEIGHT = 468;
-
+IMG_WIDTH_DEFAULT = 640;
+IMG_HEIGHT_DEFAULT = 480;
+LINES_SKIP_DEFAULT = 0; #lines not sent via internet
+print(type(IMG_HEIGHT_DEFAULT))
 def main():
+    #Check the number of arguments passed to set resolution
+    if len(sys.argv)==1:
+        IMG_WIDTH = IMG_WIDTH_DEFAULT
+        IMG_HEIGHT = IMG_HEIGHT_DEFAULT
+        LINES_SKIP = LINES_SKIP_DEFAULT
+    elif len(sys.argv)==3:
+        IMG_WIDTH = int(sys.argv[1])
+        IMG_HEIGHT = int(sys.argv[2])
+        LINES_SKIP = LINES_SKIP_DEFAULT
+    elif len(sys.argv)==4:
+        IMG_WIDTH = int(sys.argv[1])
+        IMG_HEIGHT = int(sys.argv[2])
+        LINES_SKIP = int(sys.argv[3])
+    else:
+        print 'For custom resolution call: python triangle_detector_server custom_width custom_height'
+        print 'Example: python triangle_detector_server 1280 960'
+        print 'If you do not want to send some lines at the end of the image: python triangle_detector_server custom_width custom_height lines_skip'
+        print 'Example not sending last 12 lines: python triangle_detector_server 1280 936 12'
+        print 'Just call without arguments for default resolution (640x468) skipping 0 lines'
+        return
+
+    #set the resolution in the driver
+    f_width  =  open("/sys/uvispace_camera/attributes/image_width", "w");
+    file.write(f_width, str(IMG_WIDTH));
+    file.close(f_width);
+    f_height  =  open("/sys/uvispace_camera/attributes/image_height", "w");
+    file.write(f_height, str(IMG_HEIGHT));
+    file.close(f_height);
+
     # Init fps(frames per second) counter
+    IMG_HEIGHT_SEND = IMG_HEIGHT-LINES_SKIP;
     mean_fps = 0
     # Bind publisher socket
     bin_frame_publisher = zmq.Context.instance().socket(zmq.PUB)
@@ -31,15 +63,15 @@ def main():
     f_gray =  open("/dev/uvispace_camera_gray", "rb");
     t1 = datetime.datetime.now()
     while True:
-        #get last binary image from memory, calculate triangles and serve them
-        bin_frame = numpy.fromfile(f_bin, numpy.uint8, IMG_HEIGHT * IMG_WIDTH).reshape((IMG_HEIGHT, IMG_WIDTH))
+        #extract triangles from bin image and publish them
+        bin_frame = numpy.fromfile(f_bin, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
         triangles = process_frame(bin_frame)
         triangle_publisher.send_json(triangles)
-        #get gray image from memory and serve binary and gray images
+        #publish binary image and gray image 
         bin_frame_publisher.send(bin_frame)
-        gray_frame = numpy.fromfile(f_gray, numpy.uint8, IMG_HEIGHT * IMG_WIDTH).reshape((IMG_HEIGHT, IMG_WIDTH))
+        gray_frame = numpy.fromfile(f_gray, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
         gray_frame_publisher.send(gray_frame)
-        #calculate frame rate
+        #update frame rate and print
         t2 = datetime.datetime.now()
         loop_time = (t2 - t1).microseconds
         t1 = t2
