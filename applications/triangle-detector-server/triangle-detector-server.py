@@ -11,7 +11,7 @@ import _polygon
 
 IMG_WIDTH_DEFAULT = 640;
 IMG_HEIGHT_DEFAULT = 480;
-LINES_SKIP_DEFAULT = 0; #lines not sent via internet
+LINES_SKIP_DEFAULT = 12; #lines not sent via internet
 print(type(IMG_HEIGHT_DEFAULT))
 def main():
     #Check the number of arguments passed to set resolution
@@ -19,20 +19,16 @@ def main():
         IMG_WIDTH = IMG_WIDTH_DEFAULT
         IMG_HEIGHT = IMG_HEIGHT_DEFAULT
         LINES_SKIP = LINES_SKIP_DEFAULT
-    elif len(sys.argv)==3:
-        IMG_WIDTH = int(sys.argv[1])
-        IMG_HEIGHT = int(sys.argv[2])
-        LINES_SKIP = LINES_SKIP_DEFAULT
     elif len(sys.argv)==4:
         IMG_WIDTH = int(sys.argv[1])
         IMG_HEIGHT = int(sys.argv[2])
         LINES_SKIP = int(sys.argv[3])
     else:
-        print 'For custom resolution call: python triangle_detector_server custom_width custom_height'
-        print 'Example: python triangle_detector_server 1280 960'
-        print 'If you do not want to send some lines at the end of the image: python triangle_detector_server custom_width custom_height lines_skip'
-        print 'Example not sending last 12 lines: python triangle_detector_server 1280 936 12'
-        print 'Just call without arguments for default resolution (640x468) skipping 0 lines'
+        print 'For custom resolution call:'
+        print '  python triangle_detector_server.py width height lines_skip'
+        print 'Example getting 1280x960 image from hardware skipping 24 lines:'
+        print '  python triangle_detector_server.py 1280 960 24'
+        print 'Call without arguments for default Uvispace: 640x480 skip last 12 lines'
         return
 
     #set the resolution in the driver
@@ -67,7 +63,7 @@ def main():
         bin_frame = numpy.fromfile(f_bin, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
         triangles = process_frame(bin_frame)
         triangle_publisher.send_json(triangles)
-        #publish binary image and gray image 
+        #publish binary image and gray image
         bin_frame_publisher.send(bin_frame)
         gray_frame = numpy.fromfile(f_gray, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
         gray_frame_publisher.send(gray_frame)
