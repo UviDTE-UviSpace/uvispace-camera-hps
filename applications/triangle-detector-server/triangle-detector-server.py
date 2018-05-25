@@ -19,6 +19,8 @@ IMG_HEIGHT_DEFAULT = 480;
 LINES_SKIP_DEFAULT = 12; #lines not sent via internet
 IMAGE_SEND_DEFAULT = "GRAY"
 
+FPS_SAMPLER = 100;
+
 def main():
     #Check the number of arguments passed to set resolution
     if len(sys.argv)==1:
@@ -73,7 +75,9 @@ def main():
 
     # Start loop
     IMG_HEIGHT_SEND = IMG_HEIGHT-LINES_SKIP;
+    list_fps = [None]*FPS_SAMPLER
     mean_fps = 0
+    counter = 0
     t1 = datetime.datetime.now()
     while True:
         #extract triangles from bin image and publish them
@@ -92,7 +96,12 @@ def main():
         loop_time = (t2 - t1).microseconds
         t1 = t2
         last_fps = 1000000 / loop_time
-        print(last_fps)
+        list_fps[counter] = last_fps
+        counter += 1
+	if counter == FPS_SAMPLER:
+            counter = 0
+	    mean_fps = numpy.mean(list_fps)
+            print(mean_fps)
 
 
 def process_frame(frame):
