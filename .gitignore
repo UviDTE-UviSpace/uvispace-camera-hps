@@ -1,3 +1,6 @@
+# Python aux files
+*.py~
+
 # Object files
 *.o
 *.ko
