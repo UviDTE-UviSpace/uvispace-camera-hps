@@ -82,15 +82,20 @@ def main():
     while True:
         #extract triangles from bin image and publish them
         bin_frame = numpy.fromfile(f_bin, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
-        triangles = process_frame(bin_frame)
-        triangle_publisher.send_json(triangles)
+	COL_START = 600	
+	ROW_START = 400
+	TRACK_SIZE = 120 #60 #95 #190
+	bin_frame_tracker = numpy.copy(bin_frame[ROW_START: (ROW_START + TRACK_SIZE), COL_START: (COL_START + TRACK_SIZE)] )        
+	for i in range(2):    
+            triangles = process_frame(bin_frame_tracker)
+            triangle_publisher.send_json(triangles)
         #publish binary image and gray image
-        bin_frame_publisher.send(bin_frame)
-        if IMAGE_SEND == "GRAY":
-            rgbgray_frame = numpy.fromfile(f_rgbgray, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
-        else:#RGB
-            rgbgray_frame = numpy.fromfile(f_rgbgray, numpy.uint32, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
-        rgbgray_frame_publisher.send(rgbgray_frame)
+        bin_frame_publisher.send(bin_frame_tracker)
+        #if IMAGE_SEND == "GRAY":
+            #rgbgray_frame = numpy.fromfile(f_rgbgray, numpy.uint8, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
+        #else:#RGB
+            #rgbgray_frame = numpy.fromfile(f_rgbgray, numpy.uint32, IMG_HEIGHT_SEND * IMG_WIDTH).reshape((IMG_HEIGHT_SEND, IMG_WIDTH))
+        #rgbgray_frame_publisher.send(rgbgray_frame)
         #update frame rate and print
         t2 = datetime.datetime.now()
         loop_time = (t2 - t1).microseconds
